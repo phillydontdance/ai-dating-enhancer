@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "prisma skills sync || exit 0"
+    "postinstall": "node -e \"const { execSync } = require('node:child_process'); if (process.env.DATABASE_URL) { execSync('npx prisma generate --schema=./prisma/schema.prisma', { stdio: 'inherit' }); }\""
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.1",
