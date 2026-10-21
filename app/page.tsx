@@ -40,19 +40,38 @@ const backgroundOptions = [
 
 const suggestionCards = [
 	{
-		title: "LinkedIn-ready confidence",
-		value: "+3.4x",
-		detail: "increase in recruiter opens",
+		title: "Built for job seekers",
+		value: "Pre-launch",
+		detail: "Be among our first users",
 	},
 	{
-		title: "Faster interview callbacks",
-		value: "2.1x",
-		detail: "more response from hiring teams",
-	},
-	{
-		title: "Professional consistency",
+		title: "Fast profile refresh",
 		value: "10 photos",
-		detail: "tailored to each role",
+		detail: "Professional, polished options",
+	},
+	{
+		title: "Premium look",
+		value: "AI-assisted",
+		detail: "Tailored for LinkedIn and recruiter screens",
+	},
+];
+
+// TODO: replace with real testimonials once available
+const testimonialPlaceholder = [
+	{
+		quote:
+			"Built for job seekers who want a fresh, polished profile before the next application cycle.",
+		name: "Early access",
+	},
+	{
+		quote:
+			"A clean, premium headshot workflow designed for recruiter-ready first impressions.",
+		name: "Coming soon",
+	},
+	{
+		quote:
+			"We’re preparing the launch experience for job seekers and hiring teams alike.",
+		name: "Pre-launch",
 	},
 ];
 
@@ -820,26 +839,10 @@ export default function Home() {
 
 						<section id="reviews" className="space-y-6">
 							<div className="text-xs uppercase tracking-[0.2em] text-pink-200">
-								Proof
+								Social proof
 							</div>
 							<div className="grid gap-5 md:grid-cols-3">
-								{[
-									{
-										quote:
-											"It looked exactly like me, but more polished and more confident.",
-										name: "Njeri K.",
-									},
-									{
-										quote:
-											"I used it for my own LinkedIn refresh and landed interviews within two weeks.",
-										name: "Daniel A.",
-									},
-									{
-										quote:
-											"The process felt premium and simple, even from my phone in Nairobi.",
-										name: "Amina T.",
-									},
-								].map((testimonial) => (
+								{testimonialPlaceholder.map((testimonial) => (
 									<div
 										key={testimonial.name}
 										className="rounded-[1.75rem] border border-white/10 bg-zinc-950/80 p-6"
@@ -854,6 +857,7 @@ export default function Home() {
 									</div>
 								))}
 							</div>
+							{/* TODO: replace with real testimonials once available */}
 						</section>
 					</div>
 				) : (

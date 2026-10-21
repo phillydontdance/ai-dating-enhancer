@@ -6,12 +6,20 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "postinstall": "prisma skills sync || exit 0"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.10.1",
+    "@prisma/client": "7.10.1",
+    "browser-image-compression": "^2.0.2",
+    "cloudinary": "^2.11.0",
     "next": "16.4.2",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "replicate": "^1.4.0",
+    "resend": "^6.34.1",
+    "stripe": "^23.0.0"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",
@@ -20,6 +28,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.2",
+    "prisma": "7.10.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

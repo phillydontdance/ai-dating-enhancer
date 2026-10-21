@@ -3,19 +3,34 @@
 import { FormEvent, useState } from "react";
 
 export default function AdminLoginPage() {
-  const [email, setEmail] = useState("admin@headshotly.com");
-  const [password, setPassword] = useState("admin123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setIsSubmitting(true);
+    setError("");
 
-    if (email === "admin@headshotly.com" && password === "admin123") {
+    try {
+      const response = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "Invalid admin credentials.");
+      }
+
       window.location.href = "/admin/dashboard";
-      return;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Invalid admin credentials.");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setError("Invalid admin credentials.");
   };
 
   return (
@@ -34,7 +49,9 @@ export default function AdminLoginPage() {
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
+              autoComplete="username"
               className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none transition focus:border-pink-500"
+              placeholder="admin@yourdomain.com"
             />
           </div>
           <div>
@@ -43,14 +60,20 @@ export default function AdminLoginPage() {
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
+              autoComplete="current-password"
               className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none transition focus:border-pink-500"
+              placeholder="Enter admin password"
             />
           </div>
 
           {error ? <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">{error}</div> : null}
 
-          <button type="submit" className="w-full rounded-full bg-pink-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-pink-400">
-            Sign in
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full rounded-full bg-pink-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-pink-400 disabled:cursor-not-allowed disabled:bg-zinc-700"
+          >
+            {isSubmitting ? "Signing in..." : "Sign in"}
           </button>
         </form>
       </div>

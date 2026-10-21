@@ -1,33 +1,47 @@
-const kpis = [
-  { label: "Live visitors", value: "2,418", change: "+12%" },
-  { label: "Uploads started", value: "684", change: "+9%" },
-  { label: "Payments completed", value: "231", change: "+18%" },
-  { label: "Downloads", value: "148", change: "+24%" },
-];
+"use client";
 
-const funnel = [
-  { step: "Visitors", value: 100, count: 2842 },
-  { step: "Uploads started", value: 62, count: 1768 },
-  { step: "Payments initiated", value: 42, count: 1193 },
-  { step: "Payments completed", value: 31, count: 897 },
-  { step: "Downloads", value: 17, count: 492 },
-];
+import { useEffect, useState } from "react";
 
-const paymentRows = [
-  { id: "INV-1039", method: "Stripe", amount: "$29", status: "Completed", date: "2026-10-20" },
-  { id: "INV-1042", method: "M-Pesa", amount: "KSh 3,000", status: "Pending", date: "2026-10-20" },
-  { id: "INV-1048", method: "Stripe", amount: "$29", status: "Failed", date: "2026-10-19" },
-  { id: "INV-1054", method: "M-Pesa", amount: "KSh 3,000", status: "Completed", date: "2026-10-18" },
-  { id: "INV-1061", method: "Stripe", amount: "$29", status: "Refunded", date: "2026-10-17" },
-];
-
-const failedJobs = [
-  { id: "job_4821", issue: "LoRA trainer timeout", user: "sarah@company.com", status: "Refund queued", date: "2026-10-19" },
-  { id: "job_4712", issue: "Inference model timeout", user: "njeri@startup.io", status: "Manual review", date: "2026-10-18" },
-  { id: "job_4500", issue: "Low-quality uploaded selfies", user: "mike@builder.dev", status: "Refund sent", date: "2026-10-17" },
-];
+async function fetchDashboardData() {
+  const response = await fetch("/api/admin/dashboard");
+  if (!response.ok) {
+    throw new Error("Unable to load dashboard data.");
+  }
+  return response.json();
+}
 
 export default function AdminDashboardPage() {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDashboardData()
+      .then(setData)
+      .catch(() =>
+        setData({
+          metrics: [],
+          funnel: [],
+          payments: [],
+          failedJobs: [],
+          overview: { conversionRate: "0%", avgRevenue: "$0", refundRisk: "0%" },
+        }),
+      )
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleLogout = async () => {
+    await fetch("/api/admin/logout", { method: "POST" });
+    window.location.href = "/admin/login";
+  };
+
+  if (loading || !data) {
+    return (
+      <main className="min-h-screen bg-[#090909] px-4 py-8 text-white">
+        <div className="mx-auto max-w-7xl">Loading dashboard...</div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-[#090909] px-4 py-8 text-white sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
@@ -36,11 +50,19 @@ export default function AdminDashboardPage() {
             <div className="text-xs uppercase tracking-[0.22em] text-pink-200">Operations</div>
             <h1 className="mt-2 text-3xl font-semibold tracking-[-0.06em] text-white">Analytics dashboard</h1>
           </div>
-          <div className="rounded-full border border-white/10 bg-white/[0.02] px-4 py-2 text-sm text-zinc-300">Live</div>
+          <div className="flex items-center gap-3">
+            <div className="rounded-full border border-white/10 bg-white/[0.02] px-4 py-2 text-sm text-zinc-300">Live</div>
+            <button
+              onClick={handleLogout}
+              className="rounded-full border border-white/10 bg-white/[0.02] px-4 py-2 text-sm text-zinc-300 transition hover:border-pink-500/40 hover:text-white"
+            >
+              Log out
+            </button>
+          </div>
         </header>
 
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {kpis.map((item) => (
+          {data.metrics.map((item: any) => (
             <div key={item.label} className="rounded-[1.5rem] border border-white/10 bg-zinc-950/90 p-5">
               <div className="text-sm text-zinc-400">{item.label}</div>
               <div className="mt-3 flex items-end justify-between gap-3">
@@ -62,7 +84,7 @@ export default function AdminDashboardPage() {
             </div>
 
             <div className="space-y-4">
-              {funnel.map((item) => (
+              {data.funnel.map((item: any) => (
                 <div key={item.step}>
                   <div className="mb-2 flex justify-between text-sm text-zinc-300">
                     <span>{item.step}</span>
@@ -81,15 +103,15 @@ export default function AdminDashboardPage() {
             <div className="mt-5 grid gap-4 text-sm text-zinc-300">
               <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
                 <div className="text-zinc-400">Conversion rate</div>
-                <div className="mt-2 text-2xl font-semibold text-white">17.3%</div>
+                <div className="mt-2 text-2xl font-semibold text-white">{data.overview.conversionRate}</div>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
                 <div className="text-zinc-400">Avg. revenue / order</div>
-                <div className="mt-2 text-2xl font-semibold text-white">$29</div>
+                <div className="mt-2 text-2xl font-semibold text-white">{data.overview.avgRevenue}</div>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
                 <div className="text-zinc-400">Refund risk</div>
-                <div className="mt-2 text-2xl font-semibold text-white">2.1%</div>
+                <div className="mt-2 text-2xl font-semibold text-white">{data.overview.refundRisk}</div>
               </div>
             </div>
           </div>
@@ -117,7 +139,7 @@ export default function AdminDashboardPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {paymentRows.map((row) => (
+                  {data.payments.map((row: any) => (
                     <tr key={row.id} className="border-t border-white/10">
                       <td className="py-3 pr-4 text-white">{row.id}</td>
                       <td className="py-3 pr-4">{row.method}</td>
@@ -125,7 +147,7 @@ export default function AdminDashboardPage() {
                       <td className="py-3 pr-4">
                         <span className="rounded-full border border-white/10 bg-white/[0.03] px-2 py-1 text-xs text-zinc-200">{row.status}</span>
                       </td>
-                      <td className="py-3 pr-4">{row.date}</td>
+                      <td className="py-3 pr-4">{new Date(row.date).toLocaleDateString()}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -140,14 +162,14 @@ export default function AdminDashboardPage() {
             </div>
 
             <div className="space-y-4">
-              {failedJobs.map((job) => (
+              {data.failedJobs.map((job: any) => (
                 <div key={job.id} className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div className="text-sm font-medium text-white">{job.id}</div>
                     <div className="rounded-full border border-pink-500/30 bg-pink-500/10 px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-pink-100">{job.status}</div>
                   </div>
                   <div className="mt-3 text-sm text-zinc-300">{job.issue}</div>
-                  <div className="mt-3 text-xs text-zinc-400">{job.user} • {job.date}</div>
+                  <div className="mt-3 text-xs text-zinc-400">{job.user} • {new Date(job.date).toLocaleDateString()}</div>
                 </div>
               ))}
             </div>

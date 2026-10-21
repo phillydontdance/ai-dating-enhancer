@@ -1,15 +1,20 @@
+import localFont from "next/font/local";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
+const geistSans = localFont({
+  src: [
+    { path: "../public/fonts/geist-regular.ttf", weight: "400", style: "normal" },
+    { path: "../public/fonts/geist-bold.ttf", weight: "700", style: "normal" },
+  ],
   variable: "--font-geist-sans",
-  subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
+const geistMono = localFont({
+  src: "../public/fonts/geist-mono.ttf",
   variable: "--font-geist-mono",
-  subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -18,7 +23,7 @@ export const metadata: Metadata = {
     "Transform regular selfies into premium professional headshots for recruiters and job seekers.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html
       lang="en"
