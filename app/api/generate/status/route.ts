@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import Replicate from 'replicate';
 import { prisma } from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+
 const replicate = new Replicate({ auth: process.env.REPLICATE_API_TOKEN || '' });
 
 export async function GET(request: Request) {

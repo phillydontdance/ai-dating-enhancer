@@ -3,6 +3,8 @@ import { cookies } from 'next/headers';
 import { verifySignedValue } from '@/lib/admin-auth';
 import { prisma } from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const cookieStore = await cookies();
   const session = cookieStore.get('headshotly_admin_session')?.value;
