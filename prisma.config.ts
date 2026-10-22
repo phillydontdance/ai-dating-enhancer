@@ -1,8 +1,7 @@
 import 'dotenv/config';
 import { defineConfig } from 'prisma/config';
 
-const databaseUrl =
-  process.env.DATABASE_URL ?? 'postgresql://postgres:postgres@localhost:5432/headshotly?schema=public';
+const databaseUrl = process.env.DATABASE_URL ?? 'postgresql://postgres:postgres@localhost:5432/headshotly?schema=public';
 
 export default defineConfig({
   schema: './prisma/schema.prisma',
