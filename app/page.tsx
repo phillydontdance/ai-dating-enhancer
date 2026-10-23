@@ -2,6 +2,13 @@
 
 import { ChangeEvent, useState } from "react";
 
+type MessageRole = "user" | "assistant";
+
+type ChatMessage = {
+	role: MessageRole;
+	text: string;
+};
+
 const styleOptions = [
 	{
 		id: "corporate",
@@ -106,6 +113,48 @@ export default function Home() {
 		reviewCandidates.slice(0, 10).map((candidate) => candidate.id),
 	);
 	const [isProcessing, setIsProcessing] = useState(false);
+	const [chatInput, setChatInput] = useState("");
+	const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
+		{
+			role: "assistant",
+			text: "Share your target role, years of experience, and key achievements. I’ll turn that into a polished CV or resume draft.",
+		},
+	]);
+
+	const generateResumeDraft = (input: string) => {
+		const normalized = input.trim();
+		if (!normalized) {
+			return "Please share your job target and experience so I can draft a better CV.";
+		}
+
+		const firstSentence = normalized.split(/[.!?]/)[0]?.trim() || normalized;
+		const summary =
+			firstSentence.length > 120
+				? `${firstSentence.slice(0, 117).trim()}...`
+				: firstSentence;
+
+		return [
+			`Professional Summary: Results-driven professional with experience in ${summary}. Brings strong problem-solving, communication, and execution skills to a high-impact role.`,
+			"Core Skills: Stakeholder communication, project delivery, strategic planning, team collaboration, reporting, and process improvement.",
+			"Experience Highlights: Delivered measurable business outcomes, improved workflows, and supported cross-functional teams in fast-paced environments.",
+			"CV Tip: Tailor your first bullet to a key business result and quantify it with numbers, timelines, and clear outcome language.",
+		].join("\n\n");
+	};
+
+	const handleChatSubmit = () => {
+		const text = chatInput.trim();
+		if (!text) {
+			return;
+		}
+
+		setChatMessages((current) => [...current, { role: "user", text }]);
+		setChatInput("");
+
+		const draft = generateResumeDraft(text);
+		window.setTimeout(() => {
+			setChatMessages((current) => [...current, { role: "assistant", text: draft }]);
+		}, 200);
+	};
 
 	const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
 		const files = Array.from(event.target.files ?? []);
@@ -173,7 +222,7 @@ export default function Home() {
 				<section className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
 					<div className="space-y-8">
 						<div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.22em] text-pink-200">
-							AI headshots for serious candidates
+							Pre-book before launch • $15
 						</div>
 						<div className="space-y-5">
 							<h1 className="max-w-xl text-5xl font-semibold tracking-[-0.08em] text-white sm:text-6xl">
@@ -190,7 +239,7 @@ export default function Home() {
 								onClick={() => setCurrentStep("upload")}
 								className="rounded-full bg-pink-500 px-6 py-3 text-sm font-semibold text-white shadow-[0_20px_50px_rgba(255,79,163,0.35)] transition hover:bg-pink-400"
 							>
-								Get Started
+								Pre-book now
 							</button>
 							<button className="rounded-full border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:border-white/30 hover:bg-white/10">
 								See examples
@@ -213,6 +262,40 @@ export default function Home() {
 									</div>
 								</div>
 							))}
+						</div>
+
+						<div className="max-w-xl rounded-[1.75rem] border border-white/10 bg-zinc-950/80 p-5">
+							<div className="mb-3 text-xs uppercase tracking-[0.22em] text-pink-200">
+								CV / Resume Assistant
+							</div>
+							<div className="space-y-3">
+								{chatMessages.map((message, index) => (
+									<div
+										key={`${message.role}-${index}`}
+										className={`rounded-2xl border p-3 text-sm leading-6 ${
+											message.role === "assistant"
+												? "border-white/10 bg-white/[0.02] text-zinc-200"
+												: "border-pink-500/30 bg-pink-500/10 text-pink-50"
+										}`}
+									>
+										{message.text}
+									</div>
+								))}
+							</div>
+							<div className="mt-4 flex gap-2">
+								<input
+									value={chatInput}
+									onChange={(event) => setChatInput(event.target.value)}
+									placeholder="e.g. Product manager with 5 years in SaaS..."
+									className="flex-1 rounded-full border border-white/10 bg-black/20 px-4 py-2.5 text-sm text-white placeholder:text-zinc-500 focus:border-pink-500 outline-none"
+								/>
+								<button
+									onClick={handleChatSubmit}
+									className="rounded-full bg-pink-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-pink-400"
+								>
+									Generate
+								</button>
+							</div>
 						</div>
 					</div>
 
@@ -313,6 +396,10 @@ export default function Home() {
 							</div>
 						</div>
 					) : null}
+
+					<div className="mt-6 rounded-[1.5rem] border border-pink-500/20 bg-pink-500/[0.04] p-4 text-sm text-pink-100">
+						Pre-book rate: <span className="font-semibold">$15 USD</span> — paid after you upload your photos and confirm the order.
+					</div>
 
 					<div className="mt-8 flex items-center justify-between gap-4 border-t border-white/10 pt-6">
 						<button
@@ -449,7 +536,7 @@ export default function Home() {
 							</h2>
 						</div>
 						<div className="rounded-full border border-pink-500/30 bg-pink-500/10 px-4 py-2 text-sm font-medium text-pink-100">
-							$29 for 10 photos
+							$15 pre-book • paid after upload
 						</div>
 					</div>
 
@@ -469,7 +556,7 @@ export default function Home() {
 								Stripe Checkout — secure cards, Apple Pay, and bank-supported
 								payments.
 							</div>
-							<div className="mt-5 text-2xl font-semibold text-white">$29</div>
+							<div className="mt-5 text-2xl font-semibold text-white">$15</div>
 						</button>
 
 						<button
@@ -485,7 +572,7 @@ export default function Home() {
 								Daraja STK push for mobile-first payments across Kenya.
 							</div>
 							<div className="mt-5 text-2xl font-semibold text-white">
-								KSh 3,000
+								KSh 2,300
 							</div>
 						</button>
 					</div>
@@ -500,12 +587,10 @@ export default function Home() {
 							</div>
 							<div className="text-right">
 								<div className="text-xs uppercase tracking-[0.2em] text-zinc-400">
-									Total
+									Pre-book total
 								</div>
 								<div className="text-2xl font-semibold text-pink-200">
-									{selectedPayment === "stripe"
-										? "$29"
-										: "KSh 3,000"}
+									{selectedPayment === "stripe" ? "$15" : "KSh 2,300"}
 								</div>
 							</div>
 						</div>
@@ -531,7 +616,7 @@ export default function Home() {
 							onClick={handlePayment}
 							className="rounded-full bg-pink-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-pink-400"
 						>
-							Pay with{" "}
+							Pay after upload with{" "}
 							{selectedPayment === "stripe" ? "Stripe" : "M-Pesa"}
 						</button>
 					</div>
@@ -697,36 +782,28 @@ export default function Home() {
 							<div className="text-xs uppercase tracking-[0.2em] text-zinc-400">
 								Format
 							</div>
-							<div className="mt-2 text-lg font-semibold text-white">
-								ZIP / 300 DPI
-							</div>
+							<div className="mt-2 text-lg font-semibold text-white">PNG</div>
 						</div>
 						<div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
 							<div className="text-xs uppercase tracking-[0.2em] text-zinc-400">
 								Delivery
 							</div>
-							<div className="mt-2 text-lg font-semibold text-white">
-								Email + in-app
-							</div>
+							<div className="mt-2 text-lg font-semibold text-white">Email</div>
 						</div>
 						<div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
 							<div className="text-xs uppercase tracking-[0.2em] text-zinc-400">
-								Status
+								Price
 							</div>
-							<div className="mt-2 text-lg font-semibold text-white">
-								Complete
-							</div>
+							<div className="mt-2 text-lg font-semibold text-white">$15 reserved</div>
 						</div>
 					</div>
 
-					<div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
-						<button className="rounded-full bg-pink-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-pink-400">
-							Download ZIP
-						</button>
-						<button className="rounded-full border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:border-white/30 hover:bg-white/10">
-							Request another set
-						</button>
-					</div>
+					<button
+						onClick={() => setCurrentStep("landing")}
+						className="mt-8 rounded-full bg-pink-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-pink-400"
+					>
+						Back to home
+					</button>
 				</div>
 			);
 		}
