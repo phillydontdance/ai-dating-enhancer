@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     // TODO: persist to lightweight analytics table.
     console.log('Event tracked:', { eventName, userId, meta });
     return NextResponse.json({ ok: true });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Unable to record event.' }, { status: 500 });
   }
 }

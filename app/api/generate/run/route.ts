@@ -6,9 +6,15 @@ export const dynamic = 'force-dynamic';
 
 const replicate = new Replicate({ auth: process.env.REPLICATE_API_TOKEN || '' });
 
+type RunRequestBody = {
+  jobId?: string;
+  style?: string;
+  background?: string;
+};
+
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const body = (await request.json()) as RunRequestBody;
     const jobId = String(body?.jobId || '');
     const style = String(body?.style || 'corporate');
     const background = String(body?.background || 'studio');
@@ -31,13 +37,15 @@ export async function POST(request: Request) {
       },
     });
 
-    const outputUrls = Array.isArray(prediction) ? prediction : [String(prediction || '')].filter(Boolean);
+    const outputUrls = Array.isArray(prediction)
+      ? prediction.filter((value): value is string => typeof value === 'string' && Boolean(value))
+      : [String(prediction || '')].filter(Boolean);
 
     await prisma.job.update({
       where: { id: jobId },
       data: {
         status: 'completed',
-        outputUrls: outputUrls as any,
+        outputUrls,
       },
     });
 

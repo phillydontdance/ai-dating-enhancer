@@ -11,7 +11,7 @@ export async function POST(request: Request) {
     console.log('M-Pesa callback:', { resultCode, resultDesc, checkoutRequestId });
 
     return NextResponse.json({ ok: true, resultCode, resultDesc });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Invalid M-Pesa callback.' }, { status: 400 });
   }
 }

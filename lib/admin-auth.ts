@@ -44,6 +44,7 @@ export async function getAdminSessionFromCookies() {
   if (!verifySignedValue(cookie)) return null;
 
   const [payload, _signature] = cookie.split('.');
+  void _signature;
   if (!payload) return null;
 
   const [email, expiresAt] = payload.split(':');

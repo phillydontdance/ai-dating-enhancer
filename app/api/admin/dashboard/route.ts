@@ -86,7 +86,7 @@ export async function GET() {
         date: job.createdAt.toISOString(),
       })),
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Unable to load dashboard data.' }, { status: 500 });
   }
 }

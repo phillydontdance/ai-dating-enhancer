@@ -1,7 +1,6 @@
 "use client";
 
-import { ChangeEvent, useMemo, useState } from "react";
-import Image from "next/image";
+import { ChangeEvent, useState } from "react";
 
 const styleOptions = [
 	{
@@ -75,6 +74,8 @@ const testimonialPlaceholder = [
 	},
 ];
 
+void testimonialPlaceholder;
+
 const reviewCandidates = Array.from({ length: 24 }, (_, index) => ({
 	id: index + 1,
 	name: `Candidate ${index + 1}`,
@@ -105,13 +106,6 @@ export default function Home() {
 		reviewCandidates.slice(0, 10).map((candidate) => candidate.id),
 	);
 	const [isProcessing, setIsProcessing] = useState(false);
-
-	const totalSelected = selectedCandidates.length;
-
-	const uploadSummary = useMemo(
-		() => `${selectedFiles.length} selfies ready for AI enhancement`,
-		[selectedFiles],
-	);
 
 	const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
 		const files = Array.from(event.target.files ?? []);
@@ -416,7 +410,8 @@ export default function Home() {
 									<div className="relative h-64 w-52 overflow-hidden rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,_rgba(255,255,255,0.8),_rgba(255,255,255,0.15)_26%,_rgba(0,0,0,0.8)_100%)]">
 										<div className="absolute left-1/2 top-10 h-20 w-20 -translate-x-1/2 rounded-full bg-[#d9b9a0]" />
 										<div className="absolute left-1/2 top-24 h-28 w-24 -translate-x-1/2 rounded-[35%] bg-[#f5e5d8]" />
-										<div className="absolute left-1/2 top-[58%] h-12 w-28 -translate-x-1/2 rounded-full bg-[#f0d0c2]" />
+										<div className="absolute left-1/2 top-[58%] h-12 w-28 -translate-x-1/2 rounded-full bg-[#efd0c4]" />
+										<div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/30 to-transparent" />
 									</div>
 								</div>
 							</div>
@@ -611,7 +606,7 @@ export default function Home() {
 							</h2>
 						</div>
 						<div className="rounded-full border border-white/10 bg-white/[0.02] px-4 py-2 text-sm text-zinc-300">
-							{totalSelected}/10 selected
+							{selectedCandidates.length}/10 selected
 						</div>
 					</div>
 
@@ -741,128 +736,8 @@ export default function Home() {
 
 	return (
 		<main className="min-h-screen bg-[#090909] text-white">
-			<header className="sticky top-0 z-50 border-b border-white/10 bg-[#090909]/80 backdrop-blur-xl">
-				<div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-					<div className="flex items-center gap-3">
-						<div className="flex h-10 w-10 items-center justify-center rounded-full bg-pink-500 text-sm font-bold text-white">
-							H
-						</div>
-						<div>
-							<div className="text-lg font-semibold tracking-[-0.05em] text-white">
-								Headshotly
-							</div>
-						</div>
-					</div>
-					<nav className="hidden items-center gap-8 text-sm text-zinc-300 md:flex">
-						<a
-							href="#pricing"
-							className="transition hover:text-white"
-						>
-							Pricing
-						</a>
-						<a
-							href="#reviews"
-							className="transition hover:text-white"
-						>
-							Reviews
-						</a>
-						<a
-							href="/privacy"
-							className="transition hover:text-white"
-						>
-							Privacy
-						</a>
-					</nav>
-					<button
-						onClick={() => setCurrentStep("upload")}
-						className="rounded-full bg-pink-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-pink-400"
-					>
-						Get Started
-					</button>
-				</div>
-			</header>
-
 			<div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-				{currentStep === "landing" ? (
-					<div className="space-y-24 pb-12">
-						<section className="pt-8">{renderFlow()}</section>
-
-						<section
-							id="pricing"
-							className="grid gap-8 lg:grid-cols-[1fr_0.8fr] lg:items-center"
-						>
-							<div className="rounded-[2rem] border border-white/10 bg-zinc-950/80 p-8">
-								<div className="text-xs uppercase tracking-[0.2em] text-pink-200">
-									Transparent pricing
-								</div>
-								<div className="mt-3 flex items-end gap-3">
-									<div className="text-5xl font-semibold tracking-[-0.06em] text-white">
-										$29
-									</div>
-									<div className="pb-2 text-zinc-400">
-										for 10 high-res images
-									</div>
-								</div>
-								<ul className="mt-6 space-y-3 text-zinc-300">
-									<li>• 8–15 uploaded selfies</li>
-									<li>• AI-trained edits and background options</li>
-									<li>• 20–30 generated candidates</li>
-									<li>• Final download + email delivery</li>
-								</ul>
-							</div>
-
-							<div className="rounded-[2rem] border border-pink-500/30 bg-pink-500/10 p-8">
-								<div className="text-xs uppercase tracking-[0.2em] text-pink-200">
-									Why customers switch
-								</div>
-								<div className="mt-4 space-y-4 text-zinc-200">
-									<div>
-										<div className="text-xl font-semibold text-white">
-											Prepared for recruiters
-										</div>
-										<div className="mt-1 text-sm text-zinc-300">
-											Clean, premium portraits designed for modern hiring
-											pipelines.
-										</div>
-									</div>
-									<div>
-										<div className="text-xl font-semibold text-white">
-											Fast turnaround
-										</div>
-										<div className="mt-1 text-sm text-zinc-300">
-											From upload to download in under 90 minutes.
-										</div>
-									</div>
-								</div>
-							</div>
-						</section>
-
-						<section id="reviews" className="space-y-6">
-							<div className="text-xs uppercase tracking-[0.2em] text-pink-200">
-								Social proof
-							</div>
-							<div className="grid gap-5 md:grid-cols-3">
-								{testimonialPlaceholder.map((testimonial) => (
-									<div
-										key={testimonial.name}
-										className="rounded-[1.75rem] border border-white/10 bg-zinc-950/80 p-6"
-									>
-										<div className="mb-4 text-pink-300">★★★★★</div>
-										<p className="text-lg leading-8 text-zinc-200">
-											“{testimonial.quote}”
-										</p>
-										<div className="mt-6 text-sm uppercase tracking-[0.18em] text-zinc-400">
-											{testimonial.name}
-										</div>
-									</div>
-								))}
-							</div>
-							{/* TODO: replace with real testimonials once available */}
-						</section>
-					</div>
-				) : (
-					<section className="pb-12 pt-8">{renderFlow()}</section>
-				)}
+				{renderFlow()}
 			</div>
 		</main>
 	);

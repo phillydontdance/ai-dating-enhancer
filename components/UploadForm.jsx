@@ -30,6 +30,17 @@ export default function UploadForm() {
     setStatus('Compressing images...');
 
     try {
+      await Promise.all(
+        validFiles.map(async (file) => {
+          await imageCompression(file, {
+            maxSizeMB: 0.5,
+            maxWidthOrHeight: 512,
+            useWebWorker: true,
+            fileType: 'image/jpeg',
+          });
+        }),
+      );
+
       const compressed = await Promise.all(
         validFiles.map(async (file) => {
           const compressedFile = await imageCompression(file, {
@@ -38,7 +49,6 @@ export default function UploadForm() {
             useWebWorker: true,
             fileType: 'image/jpeg',
           });
-
           return compressedFile;
         }),
       );
@@ -46,7 +56,7 @@ export default function UploadForm() {
       setFiles(compressed);
       setStatus('Queued for AI generation');
       setProgress(5);
-    } catch (err) {
+    } catch {
       setError('Compression failed for one or more files.');
     } finally {
       setIsProcessing(false);
@@ -102,7 +112,7 @@ export default function UploadForm() {
           }
         }
       }
-    } catch (err) {
+    } catch {
       setError('Failed to process images. Please try again.');
     } finally {
       setIsProcessing(false);

@@ -1,8 +1,49 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
-async function fetchDashboardData() {
+type DashboardMetric = {
+  label: string;
+  value: string;
+  change: string;
+};
+
+type DashboardFunnel = {
+  step: string;
+  value: number;
+  count: number;
+};
+
+type DashboardPayment = {
+  id: string;
+  method: string;
+  amount: string;
+  status: string;
+  date: string;
+};
+
+type DashboardJob = {
+  id: string;
+  issue: string;
+  user: string;
+  status: string;
+  date: string;
+};
+
+type DashboardData = {
+  metrics: DashboardMetric[];
+  funnel: DashboardFunnel[];
+  overview: {
+    conversionRate: string;
+    avgRevenue: string;
+    refundRisk: string;
+  };
+  payments: DashboardPayment[];
+  failedJobs: DashboardJob[];
+};
+
+async function fetchDashboardData(): Promise<DashboardData> {
   const response = await fetch("/api/admin/dashboard");
   if (!response.ok) {
     throw new Error("Unable to load dashboard data.");
@@ -11,7 +52,8 @@ async function fetchDashboardData() {
 }
 
 export default function AdminDashboardPage() {
-  const [data, setData] = useState<any>(null);
+  const router = useRouter();
+  const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -31,7 +73,7 @@ export default function AdminDashboardPage() {
 
   const handleLogout = async () => {
     await fetch("/api/admin/logout", { method: "POST" });
-    window.location.href = "/admin/login";
+    router.push("/admin/login");
   };
 
   if (loading || !data) {
@@ -62,7 +104,7 @@ export default function AdminDashboardPage() {
         </header>
 
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {data.metrics.map((item: any) => (
+          {data.metrics.map((item) => (
             <div key={item.label} className="rounded-[1.5rem] border border-white/10 bg-zinc-950/90 p-5">
               <div className="text-sm text-zinc-400">{item.label}</div>
               <div className="mt-3 flex items-end justify-between gap-3">
@@ -84,7 +126,7 @@ export default function AdminDashboardPage() {
             </div>
 
             <div className="space-y-4">
-              {data.funnel.map((item: any) => (
+              {data.funnel.map((item) => (
                 <div key={item.step}>
                   <div className="mb-2 flex justify-between text-sm text-zinc-300">
                     <span>{item.step}</span>
@@ -139,7 +181,7 @@ export default function AdminDashboardPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {data.payments.map((row: any) => (
+                  {data.payments.map((row) => (
                     <tr key={row.id} className="border-t border-white/10">
                       <td className="py-3 pr-4 text-white">{row.id}</td>
                       <td className="py-3 pr-4">{row.method}</td>
@@ -162,7 +204,7 @@ export default function AdminDashboardPage() {
             </div>
 
             <div className="space-y-4">
-              {data.failedJobs.map((job: any) => (
+              {data.failedJobs.map((job) => (
                 <div key={job.id} className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div className="text-sm font-medium text-white">{job.id}</div>

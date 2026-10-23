@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     const response = NextResponse.json({ ok: true });
     setAdminSessionCookie(response, email);
     return response;
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Unable to sign in.' }, { status: 500 });
   }
 }
