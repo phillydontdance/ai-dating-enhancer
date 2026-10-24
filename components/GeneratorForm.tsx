@@ -46,6 +46,7 @@ const downloadImage = async (url: string, index: number) => {
 export function GeneratorForm() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [background, setBackground] = useState("Warm Gray");
+  const [profession, setProfession] = useState("Product Manager");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [images, setImages] = useState<string[]>([]);
@@ -92,6 +93,7 @@ export function GeneratorForm() {
       const formData = new FormData();
       selectedFiles.forEach((file) => formData.append("images", file));
       formData.append("background", background);
+      formData.append("profession", profession);
 
       const response = await fetch("/api/generate", {
         method: "POST",
@@ -195,6 +197,20 @@ export function GeneratorForm() {
                 </option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label htmlFor="profession" className="mb-2 block text-sm text-zinc-300">
+              Profession
+            </label>
+            <input
+              id="profession"
+              type="text"
+              value={profession}
+              onChange={(event) => setProfession(event.target.value)}
+              placeholder="e.g. Product Manager"
+              className="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none placeholder:text-zinc-500 focus:border-pink-500"
+            />
           </div>
 
           <button

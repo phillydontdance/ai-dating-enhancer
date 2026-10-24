@@ -11,10 +11,11 @@ const jobStore = new Map<
   { status: 'processing' | 'completed' | 'failed'; outputUrls: string[]; error?: string }
 >();
 
-function buildPrompt(background: string, cvText?: string) {
+function buildPrompt(background: string, cvText?: string, profession?: string) {
   const normalizedBackground = background || 'Warm Gray';
   const cvFragment = cvText && cvText.trim() ? `, ${cvText.trim().slice(0, 180)}` : '';
-  return `professional headshot, studio lighting, ${normalizedBackground} background, business attire, photorealistic, high quality, sharp focus${cvFragment}`;
+  const professionFragment = profession && profession.trim() ? `, ${profession.trim()}` : '';
+  return `professional headshot, studio lighting, ${normalizedBackground} background, business attire, photorealistic, high quality, sharp focus${cvFragment}${professionFragment}`;
 }
 
 function normalizeReplicateOutput(value: unknown): string[] {
@@ -48,11 +49,13 @@ export async function POST(request: Request) {
   try {
     const contentType = request.headers.get('content-type') || '';
     let background = 'Warm Gray';
+    let profession = '';
     let imageUrls: string[] = [];
 
     if (contentType.includes('multipart/form-data')) {
       const formData = await request.formData();
       background = String(formData.get('background') || 'Warm Gray');
+      profession = String(formData.get('profession') || '').trim();
 
       const files = formData.getAll('images').filter((item): item is File => item instanceof File && item.size > 0);
       if (!files.length) {
@@ -78,9 +81,11 @@ export async function POST(request: Request) {
         cvText?: string;
         jobId?: string;
         userEmail?: string;
+        profession?: string;
       };
 
       background = String(body.background || 'Warm Gray');
+      profession = String(body.profession || '').trim();
       imageUrls = Array.isArray(body.images)
         ? body.images.filter((item): item is string => typeof item === 'string' && Boolean(item.trim()))
         : Array.isArray(body.imageUrls)
@@ -98,7 +103,7 @@ export async function POST(request: Request) {
     }
 
     const jobId = `job_${Date.now()}`;
-    const prompt = buildPrompt(background);
+    const prompt = buildPrompt(background, undefined, profession);
 
     if (!jobStore.has(jobId)) {
       jobStore.set(jobId, { status: 'processing', outputUrls: [] });
