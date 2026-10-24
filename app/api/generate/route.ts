@@ -64,6 +64,7 @@ export async function POST(request: Request) {
           files.map((file) =>
             put(`headshots/${Date.now()}-${file.name.replace(/\s+/g, '-')}`, file, {
               access: 'public',
+              addRandomSuffix: true,
               contentType: file.type || 'image/jpeg',
             }).then((entry) => entry.url),
           ),
