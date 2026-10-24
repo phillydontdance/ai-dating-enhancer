@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import Replicate from 'replicate';
 
 const replicate = new Replicate({
-  auth: process.env.REPLICATE_API_TOKEN || '',
+  auth: process.env.REPLICATE_API_TOKEN,
 });
 
 const jobStore = new Map<
@@ -77,67 +77,52 @@ export async function POST(request: Request) {
     }
 
     const prompt = buildPrompt(background, cvText);
-    const variationJobs = Array.from({ length: 10 }, (_, index) => {
-      const selectedImage = imageUrls[index % imageUrls.length];
-      return replicate.run('stability-ai/sdxl', {
-        input: {
-          prompt: `${prompt}, variation ${index + 1}`,
-          init_image: selectedImage,
-          width: 1024,
-          height: 1024,
-          num_inference_steps: 30,
-          guidance_scale: 8,
-          strength: 0.4,
-          seed: 1000 + index * 29,
+    const uploadedUrls = imageUrls;
+
+    try {
+      const output = await replicate.run(
+        'stability-ai/sdxl:7762fd07cf82c948538e41f63f77d685e02b063e37e496e96eefd46c929f9bdc',
+        {
+          input: {
+            image: uploadedUrls[0],
+            prompt: prompt,
+            num_inference_steps: 20,
+            guidance_scale: 7.5,
+            strength: 0.65,
+            negative_prompt: 'blurry, low quality, distorted, cartoon, anime, painting',
+          },
         },
-      });
-    });
+      );
 
-    const settled = await Promise.allSettled(variationJobs);
-    const generatedImages: string[] = [];
-    const errors: string[] = [];
+      console.log('Replicate output:', output);
+      const finalOutput = Array.isArray(output) ? output[0] : output;
 
-    settled.forEach((result, index) => {
-      if (result.status === 'fulfilled') {
-        const urls = normalizeReplicateOutput(result.value);
-        if (urls.length) {
-          generatedImages.push(...urls);
-        } else {
-          errors.push(`Variation ${index + 1}: no output returned.`);
-        }
-      } else {
-        errors.push(
-          result.reason instanceof Error ? `Variation ${index + 1}: ${result.reason.message}` : `Variation ${index + 1}: generation failed.`,
-        );
+      const urls = normalizeReplicateOutput(finalOutput);
+      if (!urls.length) {
+        throw new Error('Replicate returned no usable output URL.');
       }
-    });
 
-    if (!generatedImages.length) {
+      jobStore.set(jobId, {
+        status: 'completed',
+        outputUrls: urls.slice(0, 10),
+      });
+
+      return NextResponse.json({
+        ok: true,
+        jobId,
+        images: urls.slice(0, 10),
+        count: urls.slice(0, 10).length,
+      });
+    } catch (replicateError) {
+      console.error('Replicate API Error:', replicateError);
+      const message = replicateError instanceof Error ? replicateError.message : 'Unknown Replicate error';
       jobStore.set(jobId, {
         status: 'failed',
         outputUrls: [],
-        error: errors.join('; ') || 'All image generations failed.',
+        error: message,
       });
-
-      return NextResponse.json(
-        { ok: false, error: 'All image generations failed.', details: errors },
-        { status: 500 },
-      );
+      throw new Error(`Replicate failed: ${message}`);
     }
-
-    const limitedImages = generatedImages.slice(0, 10);
-    jobStore.set(jobId, {
-      status: 'completed',
-      outputUrls: limitedImages,
-    });
-
-    return NextResponse.json({
-      ok: true,
-      jobId,
-      images: limitedImages,
-      count: limitedImages.length,
-      errors,
-    });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Image generation failed.';
     return NextResponse.json({ ok: false, error: message }, { status: 500 });
