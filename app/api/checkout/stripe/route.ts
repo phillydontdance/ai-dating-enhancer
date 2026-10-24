@@ -24,6 +24,9 @@ export async function POST(request: Request) {
     const email = String(body?.email || '');
     const userId = String(body?.userId || 'anonymous');
     const amount = Number(body?.amount || 1500);
+    const imageUrls = Array.isArray(body?.imageUrls)
+      ? body.imageUrls.filter((value: unknown): value is string => typeof value === 'string' && Boolean(value.trim()))
+      : [];
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
@@ -46,6 +49,7 @@ export async function POST(request: Request) {
         userId: userId === 'anonymous' ? 'anonymous' : userId,
         email,
         method: 'stripe',
+        imageUrls: JSON.stringify(imageUrls),
       },
     });
 
