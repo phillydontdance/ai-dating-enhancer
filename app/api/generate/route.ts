@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { put } from '@vercel/blob';
 import Replicate from 'replicate';
 
 const replicate = new Replicate({
@@ -45,46 +46,69 @@ function normalizeReplicateOutput(value: unknown): string[] {
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as {
-      images?: unknown[];
-      imageUrls?: unknown[];
-      background?: string;
-      cvText?: string;
-      jobId?: string;
-      userEmail?: string;
-    };
+    const contentType = request.headers.get('content-type') || '';
+    let background = 'Warm Gray';
+    let imageUrls: string[] = [];
 
-    const imageUrls = Array.isArray(body.images)
-      ? body.images.filter((item): item is string => typeof item === 'string' && Boolean(item.trim()))
-      : Array.isArray(body.imageUrls)
-        ? body.imageUrls.filter((item): item is string => typeof item === 'string' && Boolean(item.trim()))
-        : [];
+    if (contentType.includes('multipart/form-data')) {
+      const formData = await request.formData();
+      background = String(formData.get('background') || 'Warm Gray');
+
+      const files = formData.getAll('images').filter((item): item is File => item instanceof File && item.size > 0);
+      if (!files.length) {
+        return NextResponse.json({ ok: false, error: 'No image files were uploaded.' }, { status: 400 });
+      }
+
+      imageUrls = (
+        await Promise.all(
+          files.map((file) =>
+            put(`headshots/${Date.now()}-${file.name.replace(/\s+/g, '-')}`, file, {
+              access: 'public',
+              contentType: file.type || 'image/jpeg',
+            }).then((entry) => entry.url),
+          ),
+        )
+      ).filter((url): url is string => Boolean(url));
+    } else {
+      const body = (await request.json()) as {
+        images?: unknown[];
+        imageUrls?: unknown[];
+        background?: string;
+        cvText?: string;
+        jobId?: string;
+        userEmail?: string;
+      };
+
+      background = String(body.background || 'Warm Gray');
+      imageUrls = Array.isArray(body.images)
+        ? body.images.filter((item): item is string => typeof item === 'string' && Boolean(item.trim()))
+        : Array.isArray(body.imageUrls)
+          ? body.imageUrls.filter((item): item is string => typeof item === 'string' && Boolean(item.trim()))
+          : [];
+    }
 
     if (!imageUrls.length) {
-      return NextResponse.json({ error: 'At least one image URL is required.' }, { status: 400 });
+      return NextResponse.json({ ok: false, error: 'At least one image URL is required.' }, { status: 400 });
     }
 
     const token = process.env.REPLICATE_API_TOKEN;
     if (!token) {
-      return NextResponse.json({ error: 'REPLICATE_API_TOKEN is not configured.' }, { status: 500 });
+      return NextResponse.json({ ok: false, error: 'REPLICATE_API_TOKEN is not configured.' }, { status: 500 });
     }
 
-    const jobId = String(body.jobId || `job_${Date.now()}`);
-    const background = String(body.background || 'Warm Gray');
-    const cvText = String(body.cvText || '');
+    const jobId = `job_${Date.now()}`;
+    const prompt = buildPrompt(background);
+
     if (!jobStore.has(jobId)) {
       jobStore.set(jobId, { status: 'processing', outputUrls: [] });
     }
-
-    const prompt = buildPrompt(background, cvText);
-    const uploadedUrls = imageUrls;
 
     try {
       const output = await replicate.run(
         'stability-ai/sdxl:7762fd07cf82c948538e41f63f77d685e02b063e37e496e96eefd46c929f9bdc',
         {
           input: {
-            image: uploadedUrls[0],
+            image: imageUrls[0],
             prompt: prompt,
             num_inference_steps: 20,
             guidance_scale: 7.5,
@@ -95,23 +119,24 @@ export async function POST(request: Request) {
       );
 
       console.log('Replicate output:', output);
-      const finalOutput = Array.isArray(output) ? output[0] : output;
+      const outputUrl = Array.isArray(output) ? output[0] : output;
+      const normalized = normalizeReplicateOutput(outputUrl);
 
-      const urls = normalizeReplicateOutput(finalOutput);
-      if (!urls.length) {
+      if (!normalized.length) {
         throw new Error('Replicate returned no usable output URL.');
       }
 
       jobStore.set(jobId, {
         status: 'completed',
-        outputUrls: urls.slice(0, 10),
+        outputUrls: normalized.slice(0, 10),
       });
 
       return NextResponse.json({
         ok: true,
+        success: true,
         jobId,
-        images: urls.slice(0, 10),
-        count: urls.slice(0, 10).length,
+        images: normalized.slice(0, 10),
+        count: normalized.slice(0, 10).length,
       });
     } catch (replicateError) {
       console.error('Replicate API Error:', replicateError);
@@ -125,7 +150,7 @@ export async function POST(request: Request) {
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Image generation failed.';
-    return NextResponse.json({ ok: false, error: message }, { status: 500 });
+    return NextResponse.json({ ok: false, success: false, error: message }, { status: 500 });
   }
 }
 
