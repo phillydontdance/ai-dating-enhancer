@@ -25,17 +25,38 @@ export async function GET(request: Request) {
     }
 
     const replicateStatus = await replicate.predictions.get(job.replicateJobId);
-    const currentStatus = (replicateStatus as { status?: string; output?: unknown })?.status || job.status;
+    const currentStatus = String((replicateStatus as { status?: string } | undefined)?.status || job.status);
+    const outputUrls = Array.isArray((replicateStatus as { output?: unknown } | undefined)?.output)
+      ? ((replicateStatus as { output?: unknown }).output as unknown[])
+          .filter((value): value is string => typeof value === 'string' && Boolean(value))
+      : Array.isArray(job.outputUrls)
+        ? job.outputUrls.filter((value): value is string => typeof value === 'string' && Boolean(value))
+        : [];
 
-    await prisma.job.update({
-      where: { id: jobId },
-      data: { status: String(currentStatus) },
-    });
+    if (currentStatus === 'succeeded' || currentStatus === 'completed') {
+      await prisma.job.update({
+        where: { id: jobId },
+        data: { status: 'completed', outputUrls },
+      });
+    } else if (currentStatus === 'failed' || currentStatus === 'canceled' || currentStatus === 'cancelled') {
+      await prisma.job.update({
+        where: { id: jobId },
+        data: {
+          status: 'failed',
+          error: `Replicate job ended in ${currentStatus} state`,
+        },
+      });
+    } else {
+      await prisma.job.update({
+        where: { id: jobId },
+        data: { status: currentStatus },
+      });
+    }
 
     return NextResponse.json({
       status: currentStatus,
       complete: currentStatus === 'succeeded' || currentStatus === 'completed',
-      outputUrls: job.outputUrls,
+      outputUrls,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unable to resolve job status.';

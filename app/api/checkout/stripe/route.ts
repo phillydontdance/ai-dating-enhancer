@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { prisma } from '@/lib/prisma';
 
 function getStripeClient() {
   const secretKey = process.env.STRIPE_SECRET_KEY;
@@ -22,6 +23,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const email = String(body?.email || '');
     const userId = String(body?.userId || 'anonymous');
+    const amount = Number(body?.amount || 1500);
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
@@ -32,7 +34,7 @@ export async function POST(request: Request) {
             product_data: {
               name: 'Headshotly Professional Headshots',
             },
-            unit_amount: 2900,
+            unit_amount: amount,
           },
           quantity: 1,
         },
@@ -41,9 +43,20 @@ export async function POST(request: Request) {
       success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/payment/cancel`,
       metadata: {
-        userId,
+        userId: userId === 'anonymous' ? 'anonymous' : userId,
         email,
         method: 'stripe',
+      },
+    });
+
+    await prisma.payment.create({
+      data: {
+        userId: userId === 'anonymous' ? null : userId,
+        userEmail: email || null,
+        method: 'stripe',
+        amount,
+        status: 'pending',
+        externalRef: session.id,
       },
     });
 

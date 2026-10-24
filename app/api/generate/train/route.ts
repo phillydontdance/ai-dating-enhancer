@@ -13,6 +13,7 @@ type TrainRequestBody = {
   files?: UploadFile[];
   style?: string;
   background?: string;
+  userId?: string;
 };
 
 const replicate = new Replicate({ auth: process.env.REPLICATE_API_TOKEN || '' });
@@ -23,6 +24,7 @@ export async function POST(request: Request) {
     const files = Array.isArray(body?.files) ? body.files : [];
     const style = String(body?.style || 'corporate');
     const background = String(body?.background || 'studio');
+    const userId = String(body?.userId || 'anonymous');
 
     if (!files.length) {
       return NextResponse.json({ error: 'No files provided.' }, { status: 400 });
@@ -34,7 +36,7 @@ export async function POST(request: Request) {
 
     const job = await prisma.job.create({
       data: {
-        userId: null,
+        userId: userId === 'anonymous' ? null : userId,
         status: 'queued',
         style,
         background,
@@ -51,7 +53,11 @@ export async function POST(request: Request) {
       },
     });
 
-    const replicateJobId = String((replicateResponse as { id?: string } | undefined)?.id || replicateResponse || job.id);
+    const replicateJobId = String(
+      (replicateResponse as { id?: string } | undefined)?.id ||
+        replicateResponse ||
+        job.id,
+    );
 
     await prisma.job.update({
       where: { id: job.id },

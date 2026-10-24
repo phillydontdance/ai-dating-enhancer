@@ -1,18 +1,43 @@
 import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const phone = String(body?.phone || '').replace(/\s+/g, '');
-    const amount = Number(body?.amount || 3000);
+    const amount = Number(body?.amount || 2300);
+    const email = String(body?.email || '');
+    const userId = String(body?.userId || 'anonymous');
 
     if (!phone || phone.length < 10) {
       return NextResponse.json({ error: 'A valid phone number is required.' }, { status: 400 });
     }
 
-    const auth = Buffer.from(
-      `${process.env.SAFARICOM_CONSUMER_KEY}:${process.env.SAFARICOM_CONSUMER_SECRET}`,
-    ).toString('base64');
+    const consumerKey = process.env.SAFARICOM_CONSUMER_KEY;
+    const consumerSecret = process.env.SAFARICOM_CONSUMER_SECRET;
+
+    if (!consumerKey || !consumerSecret) {
+      const payment = await prisma.payment.create({
+        data: {
+          userId: userId === 'anonymous' ? null : userId,
+          userEmail: email || null,
+          method: 'mpesa',
+          amount: Math.round(amount),
+          status: 'pending',
+          externalRef: `demo_${Date.now()}`,
+        },
+      });
+
+      return NextResponse.json({
+        ok: true,
+        checkoutRequestId: payment.externalRef,
+        merchantRequestId: `demo_${Date.now()}`,
+        responseCode: '0',
+        responseDescription: 'M-Pesa is not configured; demo checkout created.',
+      });
+    }
+
+    const auth = Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64');
 
     const tokenResponse = await fetch('https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials', {
       method: 'GET',
@@ -57,6 +82,18 @@ export async function POST(request: Request) {
     });
 
     const stkData = await stkResponse.json();
+
+    await prisma.payment.create({
+      data: {
+        userId: userId === 'anonymous' ? null : userId,
+        userEmail: email || null,
+        method: 'mpesa',
+        amount: Math.round(amount),
+        status: 'pending',
+        externalRef: String(stkData.CheckoutRequestID || `mpesa_${Date.now()}`),
+      },
+    });
+
     return NextResponse.json({
       ok: true,
       checkoutRequestId: stkData.CheckoutRequestID,

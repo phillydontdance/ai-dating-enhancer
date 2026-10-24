@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
 export async function POST(request: Request) {
   try {
@@ -7,11 +8,30 @@ export async function POST(request: Request) {
     const resultDesc = String(body?.Body?.stkCallback?.ResultDesc || 'M-Pesa callback');
     const checkoutRequestId = String(body?.Body?.stkCallback?.CheckoutRequestID || '');
 
-    // TODO: update payment record in DB using checkoutRequestId.
-    console.log('M-Pesa callback:', { resultCode, resultDesc, checkoutRequestId });
+    if (checkoutRequestId) {
+      await prisma.payment.updateMany({
+        where: { externalRef: checkoutRequestId },
+        data: {
+          status: resultCode === 0 ? 'paid' : 'failed',
+        },
+      });
+    }
+
+    await prisma.event.create({
+      data: {
+        eventType: resultCode === 0 ? 'payment_completed' : 'payment_failed',
+        metadata: {
+          provider: 'mpesa',
+          resultCode,
+          resultDesc,
+          checkoutRequestId,
+        },
+      },
+    });
 
     return NextResponse.json({ ok: true, resultCode, resultDesc });
-  } catch {
-    return NextResponse.json({ error: 'Invalid M-Pesa callback.' }, { status: 400 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Invalid M-Pesa callback.';
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }

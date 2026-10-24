@@ -20,7 +20,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'At least one image is required.' }, { status: 400 });
     }
 
-    const zipUrl = `https://example.com/downloads/${Date.now()}.zip`;
+    const zipUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/downloads/headshots-${Date.now()}.zip`;
     const resend = getResendClient();
 
     if (email && resend) {
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
         from: 'Headshotly <hello@headshotly.app>',
         to: email,
         subject: 'Your Headshotly download is ready',
-        html: `<p>Your final 10 headshots are ready. Download them here: <a href="${zipUrl}">${zipUrl}</a></p>`,
+        html: `<p>Your final headshots are ready. Download them here: <a href="${zipUrl}">${zipUrl}</a></p>`,
       });
     }
 
