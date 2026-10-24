@@ -1,5 +1,6 @@
 "use client";
 
+import imageCompression from "browser-image-compression";
 import { ChangeEvent, useState } from "react";
 
 const backgroundOptions = [
@@ -9,6 +10,25 @@ const backgroundOptions = [
   "Deep Charcoal",
   "Soft Marble",
 ];
+
+const compressImage = async (file: File) => {
+  const options = {
+    maxSizeMB: 0.5,
+    maxWidthOrHeight: 1024,
+    useWebWorker: true,
+  };
+
+  try {
+    const compressedFile = await imageCompression(file, options);
+    console.log(
+      `Compressed ${file.size / 1024 / 1024}MB to ${compressedFile.size / 1024}KB`,
+    );
+    return compressedFile;
+  } catch (error) {
+    console.error("Compression error:", error);
+    return file;
+  }
+};
 
 const downloadImage = async (url: string, index: number) => {
   const response = await fetch(url);
@@ -31,7 +51,7 @@ export function GeneratorForm() {
   const [images, setImages] = useState<string[]>([]);
   const [failedCount, setFailedCount] = useState(0);
 
-  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? []);
     const validFiles = files.filter((file) => file.type.startsWith("image/"));
 
@@ -45,7 +65,17 @@ export function GeneratorForm() {
       return;
     }
 
-    setSelectedFiles(validFiles);
+    const compressedFiles = await Promise.all(validFiles.map((file) => compressImage(file)));
+
+    const oversized = compressedFiles.filter((file) => file.size > 2 * 1024 * 1024);
+    if (oversized.length > 0) {
+      alert("Please use a smaller image");
+      setError("Please use a smaller image");
+      setSelectedFiles([]);
+      return;
+    }
+
+    setSelectedFiles(compressedFiles);
     setError(null);
   };
 
