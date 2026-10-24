@@ -3,11 +3,18 @@ import Stripe from 'stripe';
 import { waitUntil } from '@vercel/functions';
 import { setGenerationStatus } from '@/lib/generation-status';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2026-09-30.endive',
-});
+function getStripeClient() {
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+  if (!secretKey) {
+    return null;
+  }
 
-async function processSuccessfulCheckout(session: Stripe.Checkout.Session) {
+  return new Stripe(secretKey, {
+    apiVersion: '2026-09-30.endive',
+  });
+}
+
+async function processSuccessfulCheckout(session: Stripe.Checkout.Session, baseUrl: string) {
   const customerEmail = String(session.customer_email || session.metadata?.email || '');
   const sessionId = session.id;
   const rawImageUrls = session.metadata?.imageUrls || '[]';
@@ -42,7 +49,7 @@ async function processSuccessfulCheckout(session: Stripe.Checkout.Session) {
   }
 
   try {
-    const replicateResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/generate`, {
+    const replicateResponse = await fetch(`${baseUrl}/api/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -69,7 +76,7 @@ async function processSuccessfulCheckout(session: Stripe.Checkout.Session) {
       updatedAt: Date.now(),
     });
 
-    await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/send-email`, {
+    await fetch(`${baseUrl}/api/send-email`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -92,8 +99,14 @@ async function processSuccessfulCheckout(session: Stripe.Checkout.Session) {
 
 export async function POST(request: Request) {
   try {
+    const stripe = getStripeClient();
+    if (!stripe) {
+      return NextResponse.json({ error: 'Stripe is not configured.' }, { status: 500 });
+    }
+
     const sig = request.headers.get('stripe-signature') || '';
     const rawBody = await request.text();
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
 
     const event = stripe.webhooks.constructEvent(
       rawBody,
@@ -103,7 +116,7 @@ export async function POST(request: Request) {
 
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session;
-      waitUntil(processSuccessfulCheckout(session));
+      waitUntil(processSuccessfulCheckout(session, baseUrl));
     }
 
     return NextResponse.json({ received: true });
