@@ -159,8 +159,8 @@ export default function Home() {
 	const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
 		const files = Array.from(event.target.files ?? []);
 
-		if (files.length < 8 || files.length > 15) {
-			setUploadError("Please upload between 8 and 15 selfie photos.");
+		if (files.length < 3 || files.length > 4) {
+			setUploadError("Please upload between 3 and 4 selfie photos.");
 			setSelectedFiles([]);
 			return;
 		}
@@ -179,8 +179,8 @@ export default function Home() {
 	};
 
 	const handleUploadContinue = () => {
-		if (selectedFiles.length < 8) {
-			setUploadError("Please add at least 8 selfies to continue.");
+		if (selectedFiles.length < 3) {
+			setUploadError("Please add at least 3 selfies to continue.");
 			return;
 		}
 		setCurrentStep("style");
@@ -341,7 +341,7 @@ export default function Home() {
 							</h2>
 						</div>
 						<div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-zinc-300">
-							8–15 photos
+							3–4 photos
 						</div>
 					</div>
 
@@ -397,7 +397,7 @@ export default function Home() {
 						</div>
 					) : null}
 
-					<div className="mt-6 rounded-[1.5rem] border border-pink-500/20 bg-pink-500/[0.04] p-4 text-sm text-pink-100">
+					<div className="mt-8 rounded-[1.5rem] border border-pink-500/20 bg-pink-500/[0.04] p-4 text-sm text-pink-100">
 						Pre-book rate: <span className="font-semibold">$15 USD</span> — paid after you upload your photos and confirm the order.
 					</div>
 
