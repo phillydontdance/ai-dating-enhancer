@@ -18,6 +18,54 @@ function buildPrompt(background: string, cvText?: string, profession?: string) {
   return `professional headshot, studio lighting, ${normalizedBackground} background, business attire, photorealistic, high quality, sharp focus${cvFragment}${professionFragment}`;
 }
 
+function extractImageUrlFromReplicateOutput(output: unknown): string {
+  console.log('Raw Replicate output:', JSON.stringify(output));
+
+  const extractStringFromCandidate = (candidate: unknown): string | null => {
+    if (typeof candidate === 'string' && candidate.trim()) {
+      return candidate;
+    }
+
+    if (Array.isArray(candidate) && candidate.length > 0) {
+      for (const item of candidate) {
+        const found = extractStringFromCandidate(item);
+        if (found) return found;
+      }
+    }
+
+    if (candidate && typeof candidate === 'object') {
+      const maybe = candidate as {
+        url?: unknown;
+        output?: unknown;
+        image?: unknown;
+        images?: unknown[];
+      };
+
+      const direct = extractStringFromCandidate(maybe.url ?? maybe.output ?? maybe.image);
+      if (direct) return direct;
+
+      if (Array.isArray(maybe.images)) {
+        for (const item of maybe.images) {
+          const found = extractStringFromCandidate(item);
+          if (found) return found;
+        }
+      }
+    }
+
+    return null;
+  };
+
+  const imageUrl = extractStringFromCandidate(output);
+
+  if (!imageUrl) {
+    const errorMessage = `Replicate returned no usable output URL. Raw output: ${JSON.stringify(output)}`;
+    console.error('Could not extract URL from output:', output);
+    throw new Error(errorMessage);
+  }
+
+  return imageUrl;
+}
+
 function normalizeReplicateOutput(value: unknown): string[] {
   if (Array.isArray(value)) {
     return value.filter((item): item is string => typeof item === 'string' && Boolean(item.trim()));
@@ -119,18 +167,13 @@ export async function POST(request: Request) {
             num_inference_steps: 20,
             guidance_scale: 7.5,
             strength: 0.65,
-            negative_prompt: 'blurry, low quality, distorted, cartoon, anime, painting',
+            negative_prompt: 'blurry, low quality, distorted, cartoon, anime, painting, deformed',
           },
         },
       );
 
-      console.log('Replicate output:', output);
-      const outputUrl = Array.isArray(output) ? output[0] : output;
-      const normalized = normalizeReplicateOutput(outputUrl);
-
-      if (!normalized.length) {
-        throw new Error('Replicate returned no usable output URL.');
-      }
+      const extractedImageUrl = extractImageUrlFromReplicateOutput(output);
+      const normalized = normalizeReplicateOutput(extractedImageUrl);
 
       jobStore.set(jobId, {
         status: 'completed',
