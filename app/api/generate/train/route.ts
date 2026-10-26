@@ -16,7 +16,10 @@ type TrainRequestBody = {
   userId?: string;
 };
 
-const replicate = new Replicate({ auth: process.env.REPLICATE_API_TOKEN || '' });
+const replicate = new Replicate({
+  auth: process.env.REPLICATE_API_TOKEN || '',
+  useFileOutput: false,
+});
 
 export async function POST(request: Request) {
   try {
