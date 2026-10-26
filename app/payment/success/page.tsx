@@ -112,6 +112,14 @@ export default function PaymentSuccessPage() {
     };
   }, [imageUrls, loading]);
 
+  useEffect(() => {
+    try {
+      window.localStorage.setItem('headshotly_paid', 'true');
+    } catch {
+      // ignore storage issues
+    }
+  }, []);
+
   const handleRetry = () => {
     setError(null);
     setGeneratedImages([]);

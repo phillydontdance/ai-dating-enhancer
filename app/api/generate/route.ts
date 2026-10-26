@@ -19,6 +19,24 @@ function buildPrompt(background: string, cvText?: string, profession?: string) {
   return `professional headshot, studio lighting, ${normalizedBackground} background, business attire, photorealistic, high quality, sharp focus${cvFragment}${professionFragment}`;
 }
 
+function buildPromptSet(background: string, profession?: string): string[] {
+  const normalizedBackground = background || 'Warm Gray';
+  const professionText = profession && profession.trim() ? `, ${profession.trim()}` : '';
+
+  return [
+    `professional headshot, studio lighting, ${normalizedBackground} background, business attire, photorealistic, high quality, sharp focus, confident expression${professionText}`,
+    `professional corporate portrait, soft studio lighting, ${normalizedBackground} backdrop, crisp focus, polished appearance, high detail, business professional${professionText}`,
+    `executive headshot, ${normalizedBackground} background, premium studio photography, photorealistic, natural smile, sharp focus, professional attire${professionText}`,
+    `linkedin profile photo, ${normalizedBackground} backdrop, professional studio look, bright lighting, photorealistic, high detail, business ready${professionText}`,
+    `modern business portrait, ${normalizedBackground} background, crisp detail, professional expression, studio quality, sharp focus, premium headshot${professionText}`,
+    `corporate headshot, ${normalizedBackground} backdrop, natural lighting, confident pose, professional attire, photorealistic, ultra-detailed${professionText}`,
+    `executive portrait, ${normalizedBackground} background, studio quality, sharp focus, premium headshot, confident look, polished style${professionText}`,
+    `professional profile picture, ${normalizedBackground} backdrop, clean studio lighting, business attire, photorealistic, high quality, crisp detail${professionText}`,
+    `premium headshot, ${normalizedBackground} background, cinematic lighting, professional expression, photorealistic, high detail, business style${professionText}`,
+    `standout business portrait, ${normalizedBackground} background, sharp focus, studio quality, premium lighting, polished headshot, professional pose${professionText}`,
+  ];
+}
+
 function extractImageUrlFromReplicateOutput(output: unknown): string {
   console.log('Raw Replicate output:', JSON.stringify(output));
 
@@ -152,41 +170,53 @@ export async function POST(request: Request) {
     }
 
     const jobId = `job_${Date.now()}`;
-    const prompt = buildPrompt(background, undefined, profession);
+    const promptSet = buildPromptSet(background, profession);
 
     if (!jobStore.has(jobId)) {
       jobStore.set(jobId, { status: 'processing', outputUrls: [] });
     }
 
     try {
-      const output = await replicate.run(
-        'stability-ai/sdxl:7762fd07cf82c948538e41f63f77d685e02b063e37e496e96eefd46c929f9bdc',
-        {
-          input: {
-            image: imageUrls[0],
-            prompt: prompt,
-            num_inference_steps: 20,
-            guidance_scale: 7.5,
-            strength: 0.65,
-            negative_prompt: 'blurry, low quality, distorted, cartoon, anime, painting, deformed',
-          },
-        },
+      const outputs = await Promise.all(
+        promptSet.map(async (prompt, index) => {
+          try {
+            const output = await replicate.run(
+              'stability-ai/sdxl:7762fd07cf82c948538e41f63f77d685e02b063e37e496e96eefd46c929f9bdc',
+              {
+                input: {
+                  image: imageUrls[0],
+                  prompt,
+                  num_inference_steps: 20,
+                  guidance_scale: 7.5,
+                  strength: 0.65,
+                  negative_prompt: 'blurry, low quality, distorted, cartoon, anime, painting, deformed',
+                },
+              },
+            );
+
+            return extractImageUrlFromReplicateOutput(output);
+          } catch (error) {
+            console.error(`Variant ${index + 1} failed:`, error);
+            return null;
+          }
+        }),
       );
 
-      const extractedImageUrl = extractImageUrlFromReplicateOutput(output);
-      const normalized = normalizeReplicateOutput(extractedImageUrl);
+      const normalized = outputs
+        .filter((value): value is string => typeof value === 'string' && Boolean(value.trim()))
+        .slice(0, 10);
 
       jobStore.set(jobId, {
         status: 'completed',
-        outputUrls: normalized.slice(0, 10),
+        outputUrls: normalized,
       });
 
       return NextResponse.json({
         ok: true,
         success: true,
         jobId,
-        images: normalized.slice(0, 10),
-        count: normalized.slice(0, 10).length,
+        images: normalized,
+        count: normalized.length,
       });
     } catch (replicateError) {
       console.error('Replicate API Error:', replicateError);
