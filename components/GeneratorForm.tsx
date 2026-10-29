@@ -11,6 +11,8 @@ const backgroundOptions = [
   "Soft Marble",
 ];
 
+const ASPECT_RATIO = "4:5";
+
 const compressImage = async (file: File) => {
   const options = {
     maxSizeMB: 0.5,
@@ -170,8 +172,9 @@ export function GeneratorForm() {
       selectedFiles.forEach((file) => formData.append("images", file));
       formData.append("background", background);
       formData.append("profession", profession);
+      formData.append("aspectRatio", ASPECT_RATIO);
 
-      const response = await fetch("/api/generate", {
+      const response = await fetch("/api/enhance", {
         method: "POST",
         body: formData,
       });
@@ -185,17 +188,17 @@ export function GeneratorForm() {
 
       if (!response.ok || !data.success || !Array.isArray(data.images) || !data.images.length) {
         throw new Error(
-          data.error || "AI generation failed. Please try with a clearer photo.",
+          data.error || "Image enhancement failed. Please try again with a clearer photo.",
         );
       }
 
       setImages(data.images);
-      setFailedCount(Math.max(0, 10 - data.count!));
+      setFailedCount(0);
     } catch (generationError) {
       setError(
         generationError instanceof Error
           ? generationError.message
-          : "AI generation failed. Please try with a clearer photo.",
+          : "Image enhancement failed. Please try again with a clearer photo.",
       );
       setImages([]);
       setFailedCount(0);
@@ -300,7 +303,7 @@ export function GeneratorForm() {
             disabled={loading}
             className="w-full rounded-full bg-pink-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-pink-400 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {loading ? "Generating your 10 professional headshots... This takes 2-3 minutes" : "Generate Headshots"}
+            {loading ? "Enhancing your selfie..." : "Generate Headshots"}
           </button>
         </div>
 
@@ -328,8 +331,8 @@ export function GeneratorForm() {
       {loading ? (
         <div className="mt-8 rounded-[2rem] border border-white/10 bg-zinc-950/80 p-8 text-center">
           <div className="mx-auto mb-6 h-14 w-14 animate-spin rounded-full border-4 border-pink-500/20 border-t-pink-500" />
-          <h2 className="text-2xl font-semibold text-white">Generating your 10 professional headshots...</h2>
-          <p className="mt-3 text-zinc-300">This takes 2-3 minutes.</p>
+          <h2 className="text-2xl font-semibold text-white">Enhancing your selfie...</h2>
+          <p className="mt-3 text-zinc-300">This usually returns in a few seconds.</p>
         </div>
       ) : null}
 
