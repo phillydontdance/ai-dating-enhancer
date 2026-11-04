@@ -7,9 +7,46 @@ import {
 
 export const runtime = 'nodejs';
 
-function isMissingAddOnError(error: unknown) {
+export function isMissingAddOnError(error: unknown) {
   const message = error instanceof Error ? error.message : String(error ?? '');
   return /background_removal|background removal|add-on|addon|not enabled|not available|plan/i.test(message);
+}
+
+function getErrorMessage(error: unknown): string {
+  if (!error || typeof error !== 'object') {
+    return error ? String(error) : 'Image enhancement failed.';
+  }
+
+  const maybeCloudinaryError = error as {
+    error?: unknown;
+    http_code?: number;
+    message?: unknown;
+    [key: string]: unknown;
+  };
+
+  const nestedError =
+    maybeCloudinaryError.error && typeof maybeCloudinaryError.error === 'object' ? maybeCloudinaryError.error : null;
+
+  const nestedMessage =
+    nestedError && typeof nestedError === 'object' && 'message' in nestedError ? String((nestedError as { message?: unknown }).message ?? '') : '';
+
+  const directMessage = typeof maybeCloudinaryError.message === 'string' ? maybeCloudinaryError.message : '';
+  const stringError = typeof maybeCloudinaryError.error === 'string' ? maybeCloudinaryError.error : '';
+
+  const chosenMessage = nestedMessage || directMessage || stringError;
+  if (chosenMessage.trim()) {
+    if (typeof maybeCloudinaryError.http_code === 'number') {
+      return `${chosenMessage} (Cloudinary HTTP ${maybeCloudinaryError.http_code})`;
+    }
+
+    return chosenMessage;
+  }
+
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return 'Image enhancement failed.';
 }
 
 export async function POST(request: Request) {
@@ -75,7 +112,9 @@ export async function POST(request: Request) {
       count: enhancedUrls.length,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Image enhancement failed.';
+    console.error('Image enhancement failed:', error);
+
+    const errorMessage = getErrorMessage(error);
 
     if (isMissingAddOnError(error)) {
       return NextResponse.json(
@@ -93,7 +132,7 @@ export async function POST(request: Request) {
       {
         ok: false,
         success: false,
-        error: message,
+        error: errorMessage,
       },
       { status: 500 },
     );
