@@ -32,10 +32,75 @@ const compressImage = async (file: File) => {
   }
 };
 
+const buildProfessionalCvText = (rawCvText: string) => {
+  const normalized = rawCvText.trim();
+  if (!normalized) {
+    return "Professional CV draft\n\nAdd your work history, skills, and achievements to generate a polished CV outline.";
+  }
+
+  const lines = normalized
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const firstLine = lines[0] || "Professional Candidate";
+  const titleMatch = firstLine.match(/(?:product manager|software engineer|marketing manager|data analyst|designer|consultant|operations manager|project manager|sales manager|customer success manager|account manager|business analyst|developer|manager|specialist)/i);
+  const role = titleMatch ? titleMatch[0].replace(/\b\w/g, (character) => character.toUpperCase()) : "Professional";
+
+  const sentences = normalized
+    .replace(/\s+/g, " ")
+    .split(/[.|\n]/)
+    .map((sentence) => sentence.trim())
+    .filter(Boolean)
+    .slice(0, 8);
+
+  const skills = Array.from(
+    new Set(
+      normalized
+        .match(/\b(?:leadership|strategy|analytics|project management|stakeholder management|sales|marketing|operations|customer service|communication|team leadership|research|design|finance|ux|data|python|javascript|typescript|excel|sql|negotiation|planning|execution|delivery|problem solving|product strategy|roadmapping|partnerships|reporting|presentation|research|market analysis|crm|agile|scrum|kpis|testing|implementation|training|mentoring)\b/gi) ?? [],
+    ),
+  );
+
+  const experienceLines = sentences.length
+    ? sentences
+        .map((sentence) => `- ${sentence}`)
+        .slice(0, 4)
+        .join("\n")
+    : "- Led cross-functional projects and delivered measurable outcomes.\n- Improved workflows, customer experience, and business performance.\n- Built strong stakeholder relationships and drove execution across teams.";
+
+  const skillBlock = skills.length
+    ? skills.map((skill) => `• ${skill}`).join("\n")
+    : "• Leadership\n• Strategy\n• Communication\n• Stakeholder Management\n• Problem Solving";
+
+  return [
+    firstLine,
+    `${role} | CV Draft`,
+    "",
+    "Professional Summary",
+    "Results-driven professional with a strong background in delivering measurable business impact, building cross-functional relationships, and driving execution in fast-paced environments.",
+    "",
+    "Core Skills",
+    skillBlock,
+    "",
+    "Key Experience",
+    experienceLines,
+    "",
+    "Additional Highlights",
+    "- Delivered projects that improved performance, customer experience, and operational efficiency.",
+    "- Partnered with leaders and teams to align priorities, manage execution, and achieve goals.",
+    "- Communicated clearly, managed competing priorities, and ensured consistent delivery.",
+    "",
+    "Education & Credentials",
+    "- Relevant degree or professional qualification\n- Certifications and continuous learning in line with current role requirements",
+  ].join("\n");
+};
+
 export function GeneratorForm() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [background, setBackground] = useState("Warm Gray");
   const [profession, setProfession] = useState("Product Manager");
+  const [cvDetails, setCvDetails] = useState("");
+  const [cvDraft, setCvDraft] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -110,6 +175,11 @@ export function GeneratorForm() {
     }
   };
 
+  const handleGenerateCv = () => {
+    const draft = buildProfessionalCvText(cvDetails);
+    setCvDraft(draft);
+  };
+
   const handleUnlockWithStripe = async () => {
     if (!images.length) {
       setError("Generate headshots before unlocking downloads.");
@@ -132,6 +202,8 @@ export function GeneratorForm() {
           email,
           amount: 1500,
           imageUrls: images,
+          background,
+          cvText: cvDraft || cvDetails || "",
         }),
       });
 
@@ -283,6 +355,36 @@ export function GeneratorForm() {
               className="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none placeholder:text-zinc-500 focus:border-pink-500"
             />
           </div>
+
+          <div>
+            <label htmlFor="cv-details" className="mb-2 block text-sm text-zinc-300">
+              CV / Resume details
+            </label>
+            <textarea
+              id="cv-details"
+              value={cvDetails}
+              onChange={(event) => setCvDetails(event.target.value)}
+              placeholder="Add your work experience, skills, achievements, education, and career goals here..."
+              className="min-h-32 w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none placeholder:text-zinc-500 focus:border-pink-500"
+            />
+            <div className="mt-3 flex items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={handleGenerateCv}
+                className="rounded-full border border-pink-500/50 bg-pink-500/10 px-4 py-2 text-sm font-medium text-pink-100 transition hover:bg-pink-500/20"
+              >
+                Generate professional CV draft
+              </button>
+              <span className="text-xs text-zinc-400">Uses your details to build a polished CV</span>
+            </div>
+          </div>
+
+          {cvDraft ? (
+            <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.02] p-4">
+              <div className="mb-3 text-xs uppercase tracking-[0.2em] text-zinc-400">CV preview</div>
+              <pre className="whitespace-pre-wrap text-sm leading-7 text-zinc-200">{cvDraft}</pre>
+            </div>
+          ) : null}
 
           <div>
             <label htmlFor="email" className="mb-2 block text-sm text-zinc-300">
