@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { prisma } from '@/lib/prisma';
+
+const CHECKOUT_PRICE_IN_CENTS = 1500;
 
 function getStripeClient() {
   const secretKey = process.env.STRIPE_SECRET_KEY;
@@ -17,11 +18,8 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as {
       email?: string;
-      amount?: number;
-      imageUrls?: unknown[];
+      imageUrl?: string;
       background?: string;
-      cvText?: string;
-      userId?: string;
     };
 
     const stripe = getStripeClient();
@@ -30,16 +28,12 @@ export async function POST(request: Request) {
     }
 
     const email = String(body.email || '').trim();
-    const amount = Number(body.amount || 1500);
-    const imageUrls = Array.isArray(body.imageUrls)
-      ? body.imageUrls.filter((value): value is string => typeof value === 'string' && Boolean(value.trim()))
-      : [];
-    const background = String(body.background || 'Warm Gray');
-    const cvText = String(body.cvText || '');
-    const userId = String(body.userId || 'anonymous');
+    const imageUrl = typeof body.imageUrl === 'string' ? body.imageUrl.trim() : '';
+    const background = String(body.background || 'Warm Gray').trim() || 'Warm Gray';
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
 
-    if (!imageUrls.length) {
-      return NextResponse.json({ ok: false, error: 'At least one image URL is required.' }, { status: 400 });
+    if (!imageUrl) {
+      return NextResponse.json({ ok: false, error: 'An uploaded image URL is required.' }, { status: 400 });
     }
 
     const session = await stripe.checkout.sessions.create({
@@ -49,33 +43,21 @@ export async function POST(request: Request) {
           price_data: {
             currency: 'usd',
             product_data: {
-              name: 'AI Professional Headshots',
+              name: 'AI Headshot Pack',
+              description: 'One-time 10-image generation bundle',
             },
-            unit_amount: amount,
+            unit_amount: CHECKOUT_PRICE_IN_CENTS,
           },
           quantity: 1,
         },
       ],
       customer_email: email || undefined,
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/payment/cancel`,
+      success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/`,
       metadata: {
-        email,
+        imageUrl,
         background,
-        cvText,
-        imageUrls: JSON.stringify(imageUrls),
-        userId: userId === 'anonymous' ? 'anonymous' : userId,
-      },
-    });
-
-    await prisma.payment.create({
-      data: {
-        userId: userId === 'anonymous' ? null : userId,
-        userEmail: email || null,
-        method: 'stripe',
-        amount,
-        status: 'pending',
-        externalRef: session.id,
+        email,
       },
     });
 

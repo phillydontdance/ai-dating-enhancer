@@ -3,6 +3,8 @@ import Stripe from 'stripe';
 import { waitUntil } from '@vercel/functions';
 import { setGenerationStatus } from '@/lib/generation-status';
 
+const CHECKOUT_PRICE_IN_CENTS = 1500;
+
 function getStripeClient() {
   const secretKey = process.env.STRIPE_SECRET_KEY;
   if (!secretKey) {
@@ -15,22 +17,10 @@ function getStripeClient() {
 }
 
 async function processSuccessfulCheckout(session: Stripe.Checkout.Session, baseUrl: string) {
-  const customerEmail = String(session.customer_email || session.metadata?.email || '');
   const sessionId = session.id;
-  const rawImageUrls = session.metadata?.imageUrls || '[]';
-
-  let imageUrls: string[] = [];
-  try {
-    const parsed = JSON.parse(rawImageUrls) as unknown[];
-    imageUrls = Array.isArray(parsed)
-      ? parsed.filter((value): value is string => typeof value === 'string' && Boolean(value.trim()))
-      : [];
-  } catch {
-    imageUrls = [];
-  }
-
-  const background = String(session.metadata?.background || 'Warm Gray');
-  const cvText = String(session.metadata?.cvText || '');
+  const imageUrl = String(session.metadata?.imageUrl || '').trim();
+  const background = String(session.metadata?.background || 'Warm Gray').trim() || 'Warm Gray';
+  const email = String(session.metadata?.email || session.customer_email || '').trim();
 
   setGenerationStatus(sessionId, {
     status: 'processing',
@@ -38,11 +28,11 @@ async function processSuccessfulCheckout(session: Stripe.Checkout.Session, baseU
     updatedAt: Date.now(),
   });
 
-  if (!customerEmail || !imageUrls.length) {
+  if (!imageUrl || !email) {
     setGenerationStatus(sessionId, {
       status: 'failed',
       images: [],
-      error: 'Missing email or image URLs.',
+      error: 'Missing image URL or email metadata in checkout session.',
       updatedAt: Date.now(),
     });
     return;
@@ -53,10 +43,11 @@ async function processSuccessfulCheckout(session: Stripe.Checkout.Session, baseU
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        images: imageUrls,
+        images: [imageUrl],
         background,
-        cvText,
+        cvText: '',
         jobId: sessionId,
+        userEmail: email,
       }),
     });
 
@@ -76,16 +67,9 @@ async function processSuccessfulCheckout(session: Stripe.Checkout.Session, baseU
       updatedAt: Date.now(),
     });
 
-    await fetch(`${baseUrl}/api/send-email`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: customerEmail,
-        images: generationData.images,
-        cvText,
-        subject: 'Your 10 Professional Headshots Are Ready',
-      }),
-    });
+    if (!session.amount_total || session.amount_total < CHECKOUT_PRICE_IN_CENTS) {
+      throw new Error('Checkout amount did not match the $15 expected amount.');
+    }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Generation failed.';
     setGenerationStatus(sessionId, {
