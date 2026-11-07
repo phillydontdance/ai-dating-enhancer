@@ -3,6 +3,16 @@
 import imageCompression from "browser-image-compression";
 import mammoth from "mammoth";
 import { ChangeEvent, useEffect, useState } from "react";
+import {
+  ArrowUpRight,
+  Check,
+  Download,
+  FileText,
+  ImageUp,
+  Lock,
+  LoaderCircle,
+  UploadCloud,
+} from "lucide-react";
 
 const backgroundOptions = [
   "Warm Gray",
@@ -187,8 +197,7 @@ export function GeneratorForm() {
 
     const oversized = compressedFiles.filter((file) => file.size > 2 * 1024 * 1024);
     if (oversized.length > 0) {
-      alert("Please use a smaller image");
-      setError("Please use a smaller image");
+      setError("Please use a smaller image for the upload.");
       setSelectedFiles([]);
       return;
     }
@@ -225,7 +234,7 @@ export function GeneratorForm() {
 
   const handleDownloadImage = async (url: string, index: number) => {
     if (!isPaid) {
-      setError("Unlock downloads with Stripe before saving any generated headshots.");
+      setError("Unlock downloads before saving any generated headshots.");
       return;
     }
 
@@ -244,7 +253,7 @@ export function GeneratorForm() {
   const handleDownloadAll = async () => {
     if (!images.length) return;
     if (!isPaid) {
-      setError("Unlock downloads with Stripe before saving all generated headshots.");
+      setError("Unlock downloads before saving all generated headshots.");
       return;
     }
 
@@ -388,37 +397,37 @@ export function GeneratorForm() {
   return (
     <>
       {isOnboardingOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-2xl rounded-[2rem] border border-white/10 bg-zinc-950 p-6 shadow-2xl shadow-pink-500/10 sm:p-8">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#1c1a18]/70 p-4">
+          <div className="w-full max-w-2xl rounded-[1.5rem] border border-[var(--border)] bg-[var(--panel)] p-6 shadow-[0_20px_36px_rgba(17,17,17,0.12)] sm:p-8">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <div className="text-xs uppercase tracking-[0.2em] text-pink-200">Welcome</div>
-                <h2 className="mt-2 text-3xl font-semibold text-white">Create polished headshots in minutes</h2>
+                <div className="text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--muted)]">Welcome</div>
+                <h2 className="mt-2 text-3xl font-semibold tracking-[-0.06em] text-[var(--foreground)]">Create headshots in a few steps</h2>
               </div>
               <button
                 type="button"
                 onClick={() => setIsOnboardingOpen(false)}
-                className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-white hover:bg-white/10"
+                className="rounded-full border border-[var(--border)] bg-[var(--panel-strong)] px-3 py-1 text-sm text-[var(--foreground)] hover:bg-[var(--panel)]"
               >
                 Skip
               </button>
             </div>
 
             <div className="mt-6 grid gap-4 md:grid-cols-3">
-              <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.02] p-4">
-                <div className="mb-3 text-2xl">1</div>
-                <div className="font-medium text-white">Upload your selfie</div>
-                <p className="mt-2 text-sm text-zinc-400">Pick a clear front-facing photo for best results.</p>
+              <div className="rounded-[1.25rem] border border-[var(--border)] bg-[var(--panel-strong)] p-4">
+                <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-full bg-[var(--accent-soft)] text-sm font-semibold text-[var(--accent)]">1</div>
+                <div className="font-medium text-[var(--foreground)]">Upload your photo</div>
+                <p className="mt-2 text-sm text-[var(--muted)]">Use a clear front-facing image for the best match.</p>
               </div>
-              <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.02] p-4">
-                <div className="mb-3 text-2xl">2</div>
-                <div className="font-medium text-white">Choose the style</div>
-                <p className="mt-2 text-sm text-zinc-400">Set your preferred background and profession.</p>
+              <div className="rounded-[1.25rem] border border-[var(--border)] bg-[var(--panel-strong)] p-4">
+                <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-full bg-[var(--accent-soft)] text-sm font-semibold text-[var(--accent)]">2</div>
+                <div className="font-medium text-[var(--foreground)]">Choose the style</div>
+                <p className="mt-2 text-sm text-[var(--muted)]">Set the background, role, and resume details.</p>
               </div>
-              <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.02] p-4">
-                <div className="mb-3 text-2xl">3</div>
-                <div className="font-medium text-white">Unlock and download</div>
-                <p className="mt-2 text-sm text-zinc-400">Pay once and download your final headshots instantly.</p>
+              <div className="rounded-[1.25rem] border border-[var(--border)] bg-[var(--panel-strong)] p-4">
+                <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-full bg-[var(--accent-soft)] text-sm font-semibold text-[var(--accent)]">3</div>
+                <div className="font-medium text-[var(--foreground)]">Download the set</div>
+                <p className="mt-2 text-sm text-[var(--muted)]">Pay once and download the final images.</p>
               </div>
             </div>
 
@@ -426,14 +435,14 @@ export function GeneratorForm() {
               <button
                 type="button"
                 onClick={() => setIsOnboardingOpen(false)}
-                className="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-white hover:bg-white/10"
+                className="rounded-full border border-[var(--border)] bg-[var(--panel-strong)] px-5 py-3 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--panel)]"
               >
                 Later
               </button>
               <button
                 type="button"
                 onClick={() => setIsOnboardingOpen(false)}
-                className="rounded-full bg-pink-500 px-5 py-3 text-sm font-semibold text-white hover:bg-pink-400"
+                className="rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--accent-strong)]"
               >
                 Get started
               </button>
@@ -442,40 +451,40 @@ export function GeneratorForm() {
         </div>
       ) : null}
 
-      <div className="mx-auto max-w-5xl rounded-[2rem] border border-white/10 bg-zinc-950/80 p-6 sm:p-10">
+      <div className="mx-auto max-w-5xl rounded-[1.5rem] border border-[var(--border)] bg-[var(--panel)] p-6 shadow-[0_12px_24px_var(--shadow)] sm:p-10">
         <div className="mb-8 space-y-4">
-          <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.2em] text-pink-200">
-            <span className="rounded-full border border-pink-500/30 bg-pink-500/10 px-3 py-1">Fast setup</span>
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">Cloudinary-powered</span>
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">CV-ready</span>
+          <div className="flex flex-wrap items-center gap-2 text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--muted)]">
+            <span className="rounded-full border border-[var(--border)] bg-[var(--panel-strong)] px-3 py-1">Photos</span>
+            <span className="rounded-full border border-[var(--border)] bg-[var(--panel-strong)] px-3 py-1">Background selection</span>
+            <span className="rounded-full border border-[var(--border)] bg-[var(--panel-strong)] px-3 py-1">CV-ready</span>
           </div>
-          <p className="text-xs uppercase tracking-[0.2em] text-pink-200">Headshot Generator</p>
-          <h1 className="mt-2 text-3xl font-semibold text-white">
-            Upload a selfie and generate professional headshots
+          <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--muted)]">Headshot generator</p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-[-0.06em] text-[var(--foreground)]">
+            Upload your photo and generate a professional headshot set
           </h1>
-          <p className="max-w-2xl text-sm text-zinc-300">
-            In 3 easy steps: upload a clear photo, choose your style, and unlock your polished headshots with a simple $15 checkout.
+          <p className="max-w-2xl text-sm text-[var(--muted)]">
+            Choose a clear selfie, pick a background, and pay once to unlock the final image set.
           </p>
         </div>
 
         <div className="mb-6 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
-            <div className="mb-2 text-xs uppercase tracking-[0.2em] text-zinc-400">Step 1</div>
-            <div className="text-base font-medium text-white">Upload your selfie</div>
+          <div className="rounded-[1rem] border border-[var(--border)] bg-[var(--panel-strong)] p-4">
+            <div className="mb-2 text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--muted)]">Step 1</div>
+            <div className="text-base font-medium text-[var(--foreground)]">Upload your photo</div>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
-            <div className="mb-2 text-xs uppercase tracking-[0.2em] text-zinc-400">Step 2</div>
-            <div className="text-base font-medium text-white">Pick a background + CV style</div>
+          <div className="rounded-[1rem] border border-[var(--border)] bg-[var(--panel-strong)] p-4">
+            <div className="mb-2 text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--muted)]">Step 2</div>
+            <div className="text-base font-medium text-[var(--foreground)]">Set background and role</div>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
-            <div className="mb-2 text-xs uppercase tracking-[0.2em] text-zinc-400">Step 3</div>
-            <div className="text-base font-medium text-white">Unlock and download</div>
+          <div className="rounded-[1rem] border border-[var(--border)] bg-[var(--panel-strong)] p-4">
+            <div className="mb-2 text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--muted)]">Step 3</div>
+            <div className="text-base font-medium text-[var(--foreground)]">Download the final set</div>
           </div>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
           <div className="space-y-5">
-            <div className="rounded-[1.5rem] border border-dashed border-pink-500/40 bg-pink-500/[0.04] p-6">
+            <div className="rounded-[1.25rem] border border-dashed border-[var(--border)] bg-[var(--panel-strong)] p-6">
               <input
                 id="generator-upload"
                 type="file"
@@ -486,7 +495,7 @@ export function GeneratorForm() {
               />
               <label
                 htmlFor="generator-upload"
-                className="flex cursor-pointer flex-col items-center justify-center rounded-[1.25rem] border border-white/10 bg-black/20 px-6 py-12 text-center transition hover:border-pink-500/50 hover:bg-black/30"
+                className="flex cursor-pointer flex-col items-center justify-center rounded-[1rem] border border-[var(--border)] bg-[var(--panel)] px-6 py-12 text-center transition hover:border-[var(--accent)]"
                 onDragOver={(e) => {
                   e.preventDefault();
                   setIsDragging(true);
@@ -494,27 +503,29 @@ export function GeneratorForm() {
                 onDragLeave={() => setIsDragging(false)}
                 onDrop={handleDrop}
               >
-                <div className="mb-4 rounded-full bg-pink-500/15 p-4 text-pink-300">↑</div>
-                <div className="text-xl font-medium text-white">Choose your selfie photos</div>
-                <div className="mt-2 text-sm text-zinc-400">
-                  Upload 1–3 clear front-facing photos for best results.
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
+                  <UploadCloud className="h-5 w-5" strokeWidth={1.9} />
+                </div>
+                <div className="text-xl font-medium text-[var(--foreground)]">Upload your selfie photos</div>
+                <div className="mt-2 text-sm text-[var(--muted)]">
+                  Upload 1–3 front-facing photos for the best result.
                 </div>
                 {isDragging ? (
-                  <div className="absolute inset-0 flex items-center justify-center rounded-[1.25rem] border-2 border-pink-500/50 bg-black/30">
-                    <span className="text-sm text-pink-100">Drop the files here...</span>
+                  <div className="absolute inset-0 flex items-center justify-center rounded-[1rem] border-2 border-[var(--accent)] bg-[var(--panel-strong)]">
+                    <span className="text-sm text-[var(--accent)]">Drop files here</span>
                   </div>
                 ) : null}
               </label>
             </div>
 
             {selectedFiles.length > 0 ? (
-              <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
-                <div className="text-sm text-zinc-300">Selected files</div>
+              <div className="rounded-[1rem] border border-[var(--border)] bg-[var(--panel-strong)] p-4">
+                <div className="text-sm text-[var(--foreground)]">Selected files</div>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {selectedFiles.map((file, index) => (
                     <span
                       key={`${file.name}-${index}`}
-                      className="rounded-full border border-white/10 bg-zinc-900 px-3 py-1 text-xs text-zinc-300"
+                      className="rounded-full border border-[var(--border)] bg-[var(--panel)] px-3 py-1 text-xs text-[var(--muted)]"
                     >
                       {file.name.slice(0, 18)}
                     </span>
@@ -524,11 +535,11 @@ export function GeneratorForm() {
             ) : null}
 
             <div>
-              <label className="mb-2 block text-sm text-zinc-300">Background</label>
+              <label className="mb-2 block text-sm text-[var(--muted)]">Background</label>
               <select
                 value={background}
                 onChange={(event) => setBackground(event.target.value)}
-                className="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none focus:border-pink-500"
+                className="w-full rounded-xl border border-[var(--border)] bg-[var(--panel-strong)] px-4 py-3 text-[var(--foreground)] outline-none focus:border-[var(--accent)]"
               >
                 {backgroundOptions.map((option) => (
                   <option key={option} value={option}>
@@ -539,8 +550,8 @@ export function GeneratorForm() {
             </div>
 
             <div>
-              <label htmlFor="profession" className="mb-2 block text-sm text-zinc-300">
-                Profession
+              <label htmlFor="profession" className="mb-2 block text-sm text-[var(--muted)]">
+                Role
               </label>
               <input
                 id="profession"
@@ -548,15 +559,15 @@ export function GeneratorForm() {
                 value={profession}
                 onChange={(event) => setProfession(event.target.value)}
                 placeholder="e.g. Product Manager"
-                className="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none placeholder:text-zinc-500 focus:border-pink-500"
+                className="w-full rounded-xl border border-[var(--border)] bg-[var(--panel-strong)] px-4 py-3 text-[var(--foreground)] outline-none placeholder:text-[var(--muted)] focus:border-[var(--accent)]"
               />
             </div>
 
-            <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.02] p-4">
+            <div className="rounded-[1.25rem] border border-[var(--border)] bg-[var(--panel-strong)] p-4">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div>
-                  <label className="block text-sm text-zinc-300">CV / Resume</label>
-                  <div className="mt-1 text-xs text-zinc-400">Upload PDF, DOCX, or TXT and we’ll extract the content.</div>
+                  <label className="block text-sm text-[var(--muted)]">CV / Resume</label>
+                  <div className="mt-1 text-xs text-[var(--muted)]">Upload a PDF, DOCX, or TXT file.</div>
                 </div>
                 <input
                   id="cv-upload"
@@ -567,16 +578,17 @@ export function GeneratorForm() {
                 />
                 <label
                   htmlFor="cv-upload"
-                  className="cursor-pointer rounded-full border border-pink-500/50 bg-pink-500/10 px-4 py-2 text-sm font-medium text-pink-100 transition hover:bg-pink-500/20"
+                  className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--panel)] px-4 py-2 text-sm font-medium text-[var(--foreground)] transition hover:border-[var(--accent)]"
                 >
-                  {cvImportLoading ? "Reading..." : "Upload CV file"}
+                  <FileText className="h-4 w-4" strokeWidth={1.8} />
+                  {cvImportLoading ? "Reading..." : "Upload file"}
                 </label>
               </div>
 
               {cvDetails ? (
-                <div className="mt-3 rounded-2xl border border-white/10 bg-black/20 p-3">
-                  <div className="mb-2 text-[10px] uppercase tracking-[0.2em] text-zinc-500">Imported CV preview</div>
-                  <p className="max-h-28 overflow-auto whitespace-pre-wrap text-xs leading-6 text-zinc-200">
+                <div className="mt-3 rounded-[0.85rem] border border-[var(--border)] bg-[var(--panel)] p-3">
+                  <div className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-[var(--muted)]">Imported CV preview</div>
+                  <p className="max-h-28 overflow-auto whitespace-pre-wrap text-xs leading-6 text-[var(--foreground)]">
                     {cvDetails.slice(0, 800)}
                     {cvDetails.length > 800 ? "..." : ""}
                   </p>
@@ -585,7 +597,7 @@ export function GeneratorForm() {
             </div>
 
             <div>
-              <label htmlFor="cv-details" className="mb-2 block text-sm text-zinc-300">
+              <label htmlFor="cv-details" className="mb-2 block text-sm text-[var(--muted)]">
                 CV / Resume details
               </label>
               <textarea
@@ -593,29 +605,30 @@ export function GeneratorForm() {
                 value={cvDetails}
                 onChange={(event) => setCvDetails(event.target.value)}
                 placeholder="Add your work experience, skills, achievements, education, and career goals here..."
-                className="min-h-32 w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none placeholder:text-zinc-500 focus:border-pink-500"
+                className="min-h-32 w-full rounded-xl border border-[var(--border)] bg-[var(--panel-strong)] px-4 py-3 text-[var(--foreground)] outline-none placeholder:text-[var(--muted)] focus:border-[var(--accent)]"
               />
               <div className="mt-3 flex items-center justify-between gap-3">
                 <button
                   type="button"
                   onClick={handleGenerateCv}
-                  className="rounded-full border border-pink-500/50 bg-pink-500/10 px-4 py-2 text-sm font-medium text-pink-100 transition hover:bg-pink-500/20"
+                  className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--panel-strong)] px-4 py-2 text-sm font-medium text-[var(--foreground)] transition hover:border-[var(--accent)]"
                 >
-                  Generate professional CV draft
+                  <Check className="h-4 w-4" strokeWidth={1.8} />
+                  Generate CV draft
                 </button>
-                <span className="text-xs text-zinc-400">Uses your details to build a polished CV</span>
+                <span className="text-xs text-[var(--muted)]">Draft based on the details you enter</span>
               </div>
             </div>
 
             {cvDraft ? (
-              <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.02] p-4">
-                <div className="mb-3 text-xs uppercase tracking-[0.2em] text-zinc-400">CV preview</div>
-                <pre className="whitespace-pre-wrap text-sm leading-7 text-zinc-200">{cvDraft}</pre>
+              <div className="rounded-[1.25rem] border border-[var(--border)] bg-[var(--panel-strong)] p-4">
+                <div className="mb-3 text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--muted)]">CV preview</div>
+                <pre className="whitespace-pre-wrap text-sm leading-7 text-[var(--foreground)]">{cvDraft}</pre>
               </div>
             ) : null}
 
             <div>
-              <label htmlFor="email" className="mb-2 block text-sm text-zinc-300">
+              <label htmlFor="email" className="mb-2 block text-sm text-[var(--muted)]">
                 Email for payment and delivery
               </label>
               <input
@@ -624,55 +637,58 @@ export function GeneratorForm() {
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="you@example.com"
-                className="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none placeholder:text-zinc-500 focus:border-pink-500"
+                className="w-full rounded-xl border border-[var(--border)] bg-[var(--panel-strong)] px-4 py-3 text-[var(--foreground)] outline-none placeholder:text-[var(--muted)] focus:border-[var(--accent)]"
               />
             </div>
 
             <button
               onClick={handleGenerate}
               disabled={loading}
-              className="w-full rounded-full bg-pink-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-pink-400 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-full bg-[var(--accent)] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[var(--accent-strong)] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {loading ? "Enhancing your selfie..." : "Generate Headshots"}
+              {loading ? "Applying background removal..." : "Generate headshots"}
             </button>
           </div>
 
-          <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
-            <div className="text-xs uppercase tracking-[0.2em] text-zinc-400">Ready output</div>
-            <div className="mt-4 text-3xl font-semibold text-white">{images.length || 0}</div>
-            <div className="mt-2 text-sm text-zinc-300">headshots generated</div>
+          <aside className="rounded-[1.25rem] border border-[var(--border)] bg-[var(--panel-strong)] p-5 shadow-[0_12px_24px_var(--shadow)]">
+            <div className="text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--muted)]">Output</div>
+            <div className="mt-4 text-3xl font-semibold text-[var(--foreground)]">{images.length || 0}</div>
+            <div className="mt-2 text-sm text-[var(--muted)]">headshots ready</div>
             {images.length > 0 && !isPaid ? (
               <button
                 onClick={() => void handleUnlockWithStripe()}
                 disabled={checkoutLoading}
-                className="mt-5 w-full rounded-full bg-amber-500 px-4 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-70"
+                className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[var(--accent-strong)] disabled:cursor-not-allowed disabled:opacity-70"
               >
-                {checkoutLoading ? "Redirecting to Stripe..." : "Unlock downloads — $15"}
+                <Lock className="h-4 w-4" strokeWidth={1.8} />
+                {checkoutLoading ? "Preparing checkout..." : "Unlock downloads — $15"}
               </button>
             ) : null}
             {failedCount > 0 ? (
-              <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
-                {failedCount} failed — retry for better results.
+              <div className="mt-4 rounded-[0.85rem] border border-[#d8b3ad] bg-[var(--error-bg)] px-3 py-2 text-sm text-[var(--error-text)]">
+                {failedCount} failed — try a cleaner source image.
               </div>
             ) : null}
-          </div>
+          </aside>
         </div>
 
         {loading ? (
-          <div className="mt-8 rounded-[2rem] border border-white/10 bg-zinc-950/80 p-8 text-center">
-            <div className="mx-auto mb-6 h-14 w-14 animate-spin rounded-full border-4 border-pink-500/20 border-t-pink-500" />
-            <h2 className="text-2xl font-semibold text-white">Enhancing your selfie...</h2>
-            <p className="mt-3 text-zinc-300">This usually returns in a few seconds.</p>
+          <div className="mt-8 rounded-[1.5rem] border border-[var(--border)] bg-[var(--panel)] p-8 text-center shadow-[0_12px_24px_var(--shadow)]">
+            <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--panel-strong)] text-[var(--accent)]">
+              <LoaderCircle className="h-7 w-7 animate-spin" strokeWidth={1.8} />
+            </div>
+            <h2 className="text-2xl font-semibold tracking-[-0.04em] text-[var(--foreground)]">Applying background removal and color correction</h2>
+            <p className="mt-3 text-[var(--muted)]">This usually takes a few seconds.</p>
           </div>
         ) : null}
 
         {error ? (
-          <div className="mt-8 rounded-[1.5rem] border border-red-500/30 bg-red-500/10 p-5 text-center text-red-100">
+          <div className="mt-8 rounded-[1.25rem] border border-[#d8b3ad] bg-[var(--error-bg)] p-5 text-center text-[var(--error-text)]">
             {error}
             <div className="mt-4 flex justify-center gap-3">
               <button
                 onClick={handleGenerate}
-                className="rounded-full bg-red-500/20 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500/30"
+                className="rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-strong)]"
               >
                 Retry
               </button>
@@ -684,14 +700,15 @@ export function GeneratorForm() {
           <div className="mt-8 space-y-6">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-semibold text-white">Your headshots</h2>
+                <h2 className="text-2xl font-semibold tracking-[-0.04em] text-[var(--foreground)]">Your headshots</h2>
               </div>
               <button
                 onClick={() => void handleDownloadAll()}
-                className="rounded-full bg-pink-500 px-6 py-3 text-sm font-semibold text-white hover:bg-pink-400 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-6 py-3 text-sm font-semibold text-white hover:bg-[var(--accent-strong)] disabled:cursor-not-allowed disabled:opacity-50"
                 disabled={!isPaid}
               >
-                {isPaid ? "Download All" : "Unlock to Download"}
+                <Download className="h-4 w-4" strokeWidth={1.8} />
+                {isPaid ? "Download all" : "Unlock to download"}
               </button>
             </div>
 
@@ -699,7 +716,7 @@ export function GeneratorForm() {
               {images.map((url, index) => (
                 <div
                   key={`${url}-${index}`}
-                  className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-zinc-950/80"
+                  className="overflow-hidden rounded-[1.25rem] border border-[var(--border)] bg-[var(--panel)] shadow-[0_12px_24px_var(--shadow)]"
                 >
                   <div className="relative">
                     <img
@@ -707,34 +724,35 @@ export function GeneratorForm() {
                       alt={`Headshot ${index + 1}`}
                       draggable={false}
                       onContextMenu={(event) => event.preventDefault()}
-                      className={`h-80 w-full object-cover select-none ${!isPaid ? 'grayscale-[0.15] brightness-75 blur-[1px]' : ''}`}
+                      className={`h-80 w-full object-cover select-none ${!isPaid ? 'grayscale-[0.1] brightness-75 blur-[1px]' : ''}`}
                       style={{ WebkitUserSelect: 'none' }}
                     />
                     {!isPaid ? (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/55">
+                      <div className="absolute inset-0 flex items-center justify-center bg-[rgba(17,17,17,0.38)]">
                         <div className="flex flex-col items-center gap-2 text-center">
-                          <span className="rounded-full border border-amber-400/50 bg-amber-500/15 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-amber-200">
-                            Paid preview
+                          <span className="rounded-full border border-[var(--border)] bg-[var(--panel)] px-3 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-[var(--foreground)]">
+                            Locked
                           </span>
-                          <span className="text-xs text-zinc-200">Unlock for $15 to download</span>
+                          <span className="text-xs text-white">Unlock for $15 to download</span>
                         </div>
                       </div>
                     ) : null}
                     {!isPaid ? (
-                      <div className="pointer-events-none absolute bottom-3 left-3 rounded-full border border-white/10 bg-black/40 px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-white/80">
+                      <div className="pointer-events-none absolute bottom-3 left-3 rounded-full border border-[var(--border)] bg-[rgba(17,17,17,0.45)] px-2 py-1 text-[10px] uppercase tracking-[0.16em] text-white">
                         Headshotly
                       </div>
                     ) : null}
                   </div>
                   <div className="flex items-center justify-between gap-3 p-3">
-                    <span className="text-xs uppercase tracking-[0.2em] text-zinc-400">
+                    <span className="text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
                       #{index + 1}
                     </span>
                     <button
                       onClick={() => void handleDownloadImage(url, index)}
-                      className="text-sm font-medium text-pink-200 hover:text-pink-100 disabled:cursor-not-allowed disabled:opacity-40"
+                      className="inline-flex items-center gap-1 text-sm font-medium text-[var(--accent)] hover:text-[var(--accent-strong)] disabled:cursor-not-allowed disabled:opacity-40"
                       disabled={!isPaid}
                     >
+                      <Download className="h-3.5 w-3.5" strokeWidth={1.8} />
                       {isPaid ? "Download" : "Locked"}
                     </button>
                   </div>

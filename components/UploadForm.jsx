@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react';
 import imageCompression from 'browser-image-compression';
+import { UploadCloud } from 'lucide-react';
 
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/heic', 'image/heif'];
 
@@ -27,7 +28,7 @@ export default function UploadForm() {
 
     setError('');
     setIsProcessing(true);
-    setStatus('Compressing images...');
+    setStatus('Compressing images');
 
     try {
       await Promise.all(
@@ -54,7 +55,7 @@ export default function UploadForm() {
       );
 
       setFiles(compressed);
-      setStatus('Queued for AI generation');
+      setStatus('Queued for generation');
       setProgress(5);
     } catch {
       setError('Compression failed for one or more files.');
@@ -71,7 +72,7 @@ export default function UploadForm() {
 
     setIsProcessing(true);
     setError('');
-    setStatus('Processing photo 1 of 10...');
+    setStatus('Processing photo 1 of 10');
 
     try {
       const response = await fetch('/api/generate', {
@@ -97,7 +98,7 @@ export default function UploadForm() {
 
           const event = JSON.parse(payload);
           if (event.type === 'progress') {
-            setStatus(event.message || 'Processing...');
+            setStatus(event.message || 'Processing image');
             const nextProgress = Math.round(((event.current || 0) / (event.total || 1)) * 100);
             setProgress(Math.max(5, Math.min(nextProgress, 100)));
           }
@@ -120,13 +121,13 @@ export default function UploadForm() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl rounded-[2rem] border border-white/10 bg-zinc-950/80 p-6 sm:p-8">
+    <div className="mx-auto max-w-3xl rounded-[1.5rem] border border-[var(--border)] bg-[var(--panel)] p-6 shadow-[0_12px_24px_var(--shadow)] sm:p-8">
       <div className="mb-6">
-        <div className="text-xs uppercase tracking-[0.2em] text-pink-200">Upload</div>
-        <h2 className="mt-2 text-3xl font-semibold text-white">Generate polished AI profile photos</h2>
+        <div className="text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--muted)]">Upload</div>
+        <h2 className="mt-2 text-3xl font-semibold tracking-[-0.06em] text-[var(--foreground)]">Generate profile photo sets</h2>
       </div>
 
-      <label className="block cursor-pointer rounded-[1.5rem] border border-dashed border-pink-500/40 bg-pink-500/[0.04] p-6 text-center transition hover:border-pink-500/70 hover:bg-pink-500/[0.08]">
+      <label className="block cursor-pointer rounded-[1.25rem] border border-dashed border-[var(--border)] bg-[var(--panel-strong)] p-6 text-center transition hover:border-[var(--accent)]">
         <input
           ref={inputRef}
           type="file"
@@ -135,21 +136,24 @@ export default function UploadForm() {
           className="hidden"
           onChange={(event) => handleFiles(event.target.files)}
         />
-        <div className="text-xl font-medium text-white">Choose 5–10 selfies</div>
-        <div className="mt-2 text-sm text-zinc-400">JPG, PNG, HEIC accepted. We compress to 512x512 and under 500KB before generation.</div>
+        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)] mx-auto">
+          <UploadCloud className="h-5 w-5" strokeWidth={1.9} />
+        </div>
+        <div className="text-xl font-medium text-[var(--foreground)]">Choose 5–10 selfies</div>
+        <div className="mt-2 text-sm text-[var(--muted)]">JPG, PNG, and HEIC files are accepted.</div>
       </label>
 
-      {error ? <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">{error}</div> : null}
+      {error ? <div className="mt-4 rounded-xl border border-[#d8b3ad] bg-[var(--error-bg)] px-4 py-3 text-sm text-[var(--error-text)]">{error}</div> : null}
 
       {files.length > 0 ? (
-        <div className="mt-6 rounded-[1.5rem] border border-white/10 bg-white/[0.02] p-4">
-          <div className="mb-3 flex items-center justify-between text-sm text-zinc-300">
-            <span>Compressed files</span>
+        <div className="mt-6 rounded-[1.25rem] border border-[var(--border)] bg-[var(--panel-strong)] p-4">
+          <div className="mb-3 flex items-center justify-between text-sm text-[var(--muted)]">
+            <span>Prepared files</span>
             <span>{files.length} ready</span>
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
             {files.map((file, index) => (
-              <div key={`${file.name}-${index}`} className="rounded-xl border border-white/10 bg-zinc-900 p-2 text-center text-xs text-zinc-300">
+              <div key={`${file.name}-${index}`} className="rounded-xl border border-[var(--border)] bg-[var(--panel)] p-2 text-center text-xs text-[var(--muted)]">
                 {file.name.slice(0, 16)}
               </div>
             ))}
@@ -158,13 +162,13 @@ export default function UploadForm() {
       ) : null}
 
       <div className="mt-6">
-        <div className="mb-2 flex items-center justify-between text-sm text-zinc-300">
+        <div className="mb-2 flex items-center justify-between text-sm text-[var(--muted)]">
           <span>{status}</span>
           <span>{progress}%</span>
         </div>
-        <div className="h-3 overflow-hidden rounded-full bg-white/5">
+        <div className="h-3 overflow-hidden rounded-full bg-[var(--panel-strong)]">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-pink-500 to-pink-400 transition-all duration-300"
+            className="h-full rounded-full bg-[var(--accent)] transition-all duration-300"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -175,9 +179,9 @@ export default function UploadForm() {
           type="button"
           disabled={isProcessing || files.length === 0}
           onClick={startGeneration}
-          className="rounded-full bg-pink-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-pink-400 disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400"
+          className="rounded-full bg-[var(--accent)] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[var(--accent-strong)] disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isProcessing ? 'Processing...' : 'Generate Photos'}
+          {isProcessing ? 'Processing...' : 'Generate photos'}
         </button>
       </div>
     </div>

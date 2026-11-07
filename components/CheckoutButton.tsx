@@ -84,7 +84,7 @@ export function CheckoutButton({
       type="button"
       onClick={handleClick}
       disabled={isLoading || !files.length}
-      className={className || 'rounded-full bg-pink-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-pink-400 disabled:cursor-not-allowed disabled:opacity-60'}
+      className={className || 'rounded-full bg-[var(--accent)] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[var(--accent-strong)] disabled:cursor-not-allowed disabled:opacity-60'}
     >
       {isLoading ? 'Uploading...' : children || 'Pay Now'}
     </button>

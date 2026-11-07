@@ -1,12 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  --background: #090909;
-  --foreground: #f5f5f5;
-  --card: #111111;
-  --muted: #a1a1aa;
-  --pink: #ff4fa3;
-  --pink-soft: #ff8bc8;
+  --background: #f4efe7;
+  --foreground: #171412;
+  --muted: #665d57;
+  --panel: #fbf7f1;
+  --panel-strong: #f1eadf;
+  --border: #d9cec1;
+  --accent: #2c4039;
+  --accent-strong: #1d2d2a;
+  --accent-soft: #ebf0eb;
+  --success: #234b3f;
+  --warning: #7d5a3d;
+  --error-bg: #f7e9e4;
+  --error-text: #7b342d;
+  --shadow: rgba(23, 20, 18, 0.08);
 }
 
 @theme inline {
@@ -22,28 +30,57 @@
 
 html {
   scroll-behavior: smooth;
+  background: var(--background);
 }
 
 body {
+  margin: 0;
+  min-height: 100vh;
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Segoe UI", Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  letter-spacing: -0.02em;
 }
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 
-::selection {
-  background: rgba(255, 79, 163, 0.35);
-  color: white;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-geist-sans), "Segoe UI", sans-serif;
+  letter-spacing: -0.06em;
+  line-height: 1.08;
+  font-weight: 700;
+  margin: 0;
 }
 
-@media (prefers-color-scheme: dark) {
+p,
+label,
+span,
+button,
+input,
+textarea,
+select {
+  letter-spacing: -0.01em;
+}
+
+::selection {
+  background: rgba(44, 64, 57, 0.18);
+  color: var(--foreground);
+}
+
+@media (prefers-color-scheme: light) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #f4efe7;
+    --foreground: #171412;
   }
 }

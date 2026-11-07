@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ShieldCheck } from "lucide-react";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -36,44 +37,46 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#090909] px-4 py-12">
-      <div className="w-full max-w-md rounded-[2rem] border border-white/10 bg-zinc-950/80 p-8 shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
+    <main className="flex min-h-screen items-center justify-center bg-[var(--background)] px-4 py-12">
+      <div className="w-full max-w-md rounded-[1.5rem] border border-[var(--border)] bg-[var(--panel)] p-8 shadow-[0_12px_24px_var(--shadow)]">
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-pink-500 text-xl font-bold text-white">A</div>
-          <div className="text-xs uppercase tracking-[0.2em] text-pink-200">Admin access</div>
-          <h1 className="mt-3 text-3xl font-semibold text-white">Headshotly dashboard</h1>
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--panel-strong)] text-[var(--accent)]">
+            <ShieldCheck className="h-7 w-7" strokeWidth={1.8} />
+          </div>
+          <div className="text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--muted)]">Admin access</div>
+          <h1 className="mt-3 text-3xl font-semibold tracking-[-0.06em] text-[var(--foreground)]">Dashboard</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="mb-2 block text-sm text-zinc-300">Email</label>
+            <label className="mb-2 block text-sm text-[var(--muted)]">Email</label>
             <input
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               autoComplete="username"
-              className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none transition focus:border-pink-500"
+              className="w-full rounded-xl border border-[var(--border)] bg-[var(--panel-strong)] px-4 py-3 text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
               placeholder="admin@yourdomain.com"
             />
           </div>
           <div>
-            <label className="mb-2 block text-sm text-zinc-300">Password</label>
+            <label className="mb-2 block text-sm text-[var(--muted)]">Password</label>
             <input
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               autoComplete="current-password"
-              className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none transition focus:border-pink-500"
+              className="w-full rounded-xl border border-[var(--border)] bg-[var(--panel-strong)] px-4 py-3 text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
               placeholder="Enter admin password"
             />
           </div>
 
-          {error ? <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">{error}</div> : null}
+          {error ? <div className="rounded-xl border border-[#d8b3ad] bg-[var(--error-bg)] px-3 py-2 text-sm text-[var(--error-text)]">{error}</div> : null}
 
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full rounded-full bg-pink-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-pink-400 disabled:cursor-not-allowed disabled:bg-zinc-700"
+            className="w-full rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[var(--accent-strong)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isSubmitting ? "Signing in..." : "Sign in"}
           </button>
