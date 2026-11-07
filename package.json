@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma migrate deploy && next build",
     "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma generate --schema=./prisma/schema.prisma && test -d node_modules/.prisma/client || (echo 'Prisma Client was not generated' && exit 1)"
