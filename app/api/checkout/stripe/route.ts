@@ -22,20 +22,39 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     const email = String(body?.email || '');
-    const imageUrl = typeof body?.imageUrl === 'string' ? body.imageUrl.trim() : '';
     const background = String(body?.background || 'Warm Gray').trim() || 'Warm Gray';
+    const candidateImageUrl = typeof body?.imageUrl === 'string' ? body.imageUrl.trim() : '';
+    const candidateImageUrls = Array.isArray(body?.imageUrls)
+      ? body.imageUrls.filter((value: unknown): value is string => typeof value === 'string' && Boolean(value.trim()))
+      : [];
+    const jobId = typeof body?.jobId === 'string' ? body.jobId.trim() : '';
 
-    if (!imageUrl) {
-      return NextResponse.json({ ok: false, error: 'An uploaded image URL is required.' }, { status: 400 });
+    let job = null;
+    if (jobId) {
+      job = await prisma.job.findUnique({ where: { id: jobId } });
+    } else {
+      const imageUrls = candidateImageUrls.length
+        ? candidateImageUrls
+        : candidateImageUrl
+          ? [candidateImageUrl]
+          : [];
+
+      if (!imageUrls.length) {
+        return NextResponse.json({ ok: false, error: 'An uploaded image URL is required.' }, { status: 400 });
+      }
+
+      job = await prisma.job.create({
+        data: {
+          status: 'pending',
+          background,
+          inputUrls: imageUrls,
+        },
+      });
     }
 
-    const job = await prisma.job.create({
-      data: {
-        status: 'pending',
-        background,
-        inputUrls: [imageUrl],
-      },
-    });
+    if (!job) {
+      return NextResponse.json({ ok: false, error: 'Checkout job was not found.' }, { status: 400 });
+    }
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',

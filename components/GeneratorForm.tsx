@@ -195,15 +195,34 @@ export function GeneratorForm() {
       setCheckoutLoading(true);
       setError(null);
 
-      const response = await fetch("/api/checkout/stripe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const createJobResponse = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          images,
+          background,
+          cvText: cvDraft || cvDetails || '',
+        }),
+      });
+
+      const createJobData = (await createJobResponse.json()) as {
+        ok?: boolean;
+        jobId?: string;
+        error?: string;
+      };
+
+      if (!createJobResponse.ok || !createJobData.ok || !createJobData.jobId) {
+        throw new Error(createJobData.error || 'Could not prepare the checkout job.');
+      }
+
+      const response = await fetch('/api/checkout/stripe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email,
           amount: 1500,
-          imageUrls: images,
+          jobId: createJobData.jobId,
           background,
-          cvText: cvDraft || cvDetails || "",
         }),
       });
 
