@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { prisma } from '@/lib/prisma';
 
 const CHECKOUT_PRICE_IN_CENTS = 1500;
 
@@ -19,6 +20,7 @@ export async function POST(request: Request) {
     const body = (await request.json()) as {
       email?: string;
       imageUrl?: string;
+      imageUrls?: unknown[];
       background?: string;
     };
 
@@ -28,13 +30,26 @@ export async function POST(request: Request) {
     }
 
     const email = String(body.email || '').trim();
-    const imageUrl = typeof body.imageUrl === 'string' ? body.imageUrl.trim() : '';
+    const imageUrls = (Array.isArray(body.imageUrls)
+      ? body.imageUrls
+      : typeof body.imageUrl === 'string' && body.imageUrl.trim()
+        ? [body.imageUrl]
+        : []
+    ).filter((value): value is string => typeof value === 'string' && Boolean(value.trim()));
     const background = String(body.background || 'Warm Gray').trim() || 'Warm Gray';
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
 
-    if (!imageUrl) {
+    if (!imageUrls.length) {
       return NextResponse.json({ ok: false, error: 'An uploaded image URL is required.' }, { status: 400 });
     }
+
+    const job = await prisma.job.create({
+      data: {
+        status: 'pending',
+        background,
+        inputUrls: imageUrls,
+      },
+    });
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
@@ -55,9 +70,19 @@ export async function POST(request: Request) {
       success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/`,
       metadata: {
-        imageUrl,
+        jobId: job.id,
         background,
         email,
+      },
+    });
+
+    await prisma.payment.create({
+      data: {
+        method: 'stripe',
+        amount: CHECKOUT_PRICE_IN_CENTS,
+        status: 'pending',
+        externalRef: session.id,
+        userEmail: email || null,
       },
     });
 

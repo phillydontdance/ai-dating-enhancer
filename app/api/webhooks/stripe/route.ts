@@ -37,14 +37,24 @@ export async function POST(request: Request) {
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
     const userEmail = session.customer_email || session.metadata?.email || 'unknown';
-    const userId = String(session.metadata?.userId || 'anonymous');
+    const jobId = String(session.metadata?.jobId || '');
     const sessionId = session.id;
+
+    let job = null;
+    if (jobId) {
+      job = await prisma.job.findUnique({
+        where: { id: jobId },
+      });
+    }
+
+    const inputUrls = Array.isArray(job?.inputUrls)
+      ? job.inputUrls.filter((value): value is string => typeof value === 'string' && Boolean(value.trim()))
+      : [];
 
     await prisma.payment.updateMany({
       where: { externalRef: sessionId },
       data: {
         userEmail,
-        userId: userId === 'anonymous' ? null : userId,
         status: 'paid',
       },
     });
@@ -52,12 +62,13 @@ export async function POST(request: Request) {
     await prisma.event.create({
       data: {
         eventType: 'payment_completed',
-        userId: userId === 'anonymous' ? null : userId,
         metadata: {
           provider: 'stripe',
           sessionId,
           amount: session.amount_total,
           email: userEmail,
+          jobId,
+          imageCount: inputUrls.length,
         },
       },
     });

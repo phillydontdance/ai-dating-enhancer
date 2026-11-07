@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { waitUntil } from '@vercel/functions';
 import { setGenerationStatus } from '@/lib/generation-status';
+import { prisma } from '@/lib/prisma';
 
 const CHECKOUT_PRICE_IN_CENTS = 1500;
 
@@ -18,7 +19,7 @@ function getStripeClient() {
 
 async function processSuccessfulCheckout(session: Stripe.Checkout.Session, baseUrl: string) {
   const sessionId = session.id;
-  const imageUrl = String(session.metadata?.imageUrl || '').trim();
+  const jobId = String(session.metadata?.jobId || '').trim();
   const background = String(session.metadata?.background || 'Warm Gray').trim() || 'Warm Gray';
   const email = String(session.metadata?.email || session.customer_email || '').trim();
 
@@ -28,22 +29,34 @@ async function processSuccessfulCheckout(session: Stripe.Checkout.Session, baseU
     updatedAt: Date.now(),
   });
 
-  if (!imageUrl || !email) {
+  if (!jobId || !email) {
     setGenerationStatus(sessionId, {
       status: 'failed',
       images: [],
-      error: 'Missing image URL or email metadata in checkout session.',
+      error: 'Missing job ID or email metadata in checkout session.',
       updatedAt: Date.now(),
     });
     return;
   }
 
   try {
+    const job = await prisma.job.findUnique({
+      where: { id: jobId },
+    });
+
+    const imageUrls = Array.isArray(job?.inputUrls)
+      ? job.inputUrls.filter((value): value is string => typeof value === 'string' && Boolean(value.trim()))
+      : [];
+
+    if (!imageUrls.length) {
+      throw new Error('No uploaded image URL was found for this checkout session.');
+    }
+
     const replicateResponse = await fetch(`${baseUrl}/api/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        images: [imageUrl],
+        images: imageUrls,
         background,
         cvText: '',
         jobId: sessionId,

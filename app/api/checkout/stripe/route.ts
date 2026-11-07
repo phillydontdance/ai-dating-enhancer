@@ -22,11 +22,20 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     const email = String(body?.email || '');
-    const userId = String(body?.userId || 'anonymous');
-    const amount = Number(body?.amount || 1500);
-    const imageUrls = Array.isArray(body?.imageUrls)
-      ? body.imageUrls.filter((value: unknown): value is string => typeof value === 'string' && Boolean(value.trim()))
-      : [];
+    const imageUrl = typeof body?.imageUrl === 'string' ? body.imageUrl.trim() : '';
+    const background = String(body?.background || 'Warm Gray').trim() || 'Warm Gray';
+
+    if (!imageUrl) {
+      return NextResponse.json({ ok: false, error: 'An uploaded image URL is required.' }, { status: 400 });
+    }
+
+    const job = await prisma.job.create({
+      data: {
+        status: 'pending',
+        background,
+        inputUrls: [imageUrl],
+      },
+    });
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
@@ -37,30 +46,28 @@ export async function POST(request: Request) {
             product_data: {
               name: 'Headshotly Professional Headshots',
             },
-            unit_amount: amount,
+            unit_amount: 1500,
           },
           quantity: 1,
         },
       ],
       customer_email: email || undefined,
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/payment/cancel`,
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/`,
       metadata: {
-        userId: userId === 'anonymous' ? 'anonymous' : userId,
+        jobId: job.id,
         email,
-        method: 'stripe',
-        imageUrls: JSON.stringify(imageUrls),
+        background,
       },
     });
 
     await prisma.payment.create({
       data: {
-        userId: userId === 'anonymous' ? null : userId,
-        userEmail: email || null,
         method: 'stripe',
-        amount,
+        amount: 1500,
         status: 'pending',
         externalRef: session.id,
+        userEmail: email || null,
       },
     });
 
