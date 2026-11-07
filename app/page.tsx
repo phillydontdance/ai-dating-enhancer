@@ -12,7 +12,7 @@ export default function Home() {
 								Create your headshots
 							</h1>
 						</div>
-						<div className="rounded-full border border-[var(--border)] bg-[var(--panel-strong)] px-3 py-1.5 text-xs font-medium uppercase tracking-[0.14em] text-[var(--accent)]">
+						<div className="rounded-full border border-[var(--lime)] bg-[var(--lime-soft)] px-3 py-1.5 text-xs font-medium uppercase tracking-[0.14em] text-[var(--lime)]">
 							$15 one-time payment
 						</div>
 					</div>

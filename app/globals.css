@@ -1,27 +1,22 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f4efe7;
-  --foreground: #171412;
-  --muted: #665d57;
-  --panel: #fbf7f1;
-  --panel-strong: #f1eadf;
-  --border: #d9cec1;
-  --accent: #2c4039;
-  --accent-strong: #1d2d2a;
-  --accent-soft: #ebf0eb;
-  --success: #234b3f;
-  --warning: #7d5a3d;
-  --error-bg: #f7e9e4;
-  --error-text: #7b342d;
-  --shadow: rgba(23, 20, 18, 0.08);
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --background: #05070b;
+  --foreground: #edf4ff;
+  --muted: #9caec7;
+  --panel: #0d1320;
+  --panel-strong: #111b2a;
+  --border: #1c2b43;
+  --accent: #2c6df6;
+  --accent-strong: #1f58d8;
+  --accent-soft: rgba(44, 109, 246, 0.14);
+  --lime: #c9ff31;
+  --lime-soft: rgba(201, 255, 49, 0.14);
+  --success: #b7ff52;
+  --warning: #ffd166;
+  --error-bg: rgba(255, 92, 92, 0.08);
+  --error-text: #ffc1c1;
+  --shadow: rgba(1, 5, 12, 0.42);
 }
 
 * {
@@ -74,13 +69,13 @@ select {
 }
 
 ::selection {
-  background: rgba(44, 64, 57, 0.18);
-  color: var(--foreground);
+  background: rgba(44, 109, 246, 0.28);
+  color: #edf4ff;
 }
 
-@media (prefers-color-scheme: light) {
+@media (prefers-color-scheme: dark) {
   :root {
-    --background: #f4efe7;
-    --foreground: #171412;
+    --background: #05070b;
+    --foreground: #edf4ff;
   }
 }
